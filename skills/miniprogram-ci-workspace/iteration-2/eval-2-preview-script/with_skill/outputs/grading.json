@@ -1,0 +1,27 @@
+{
+  "eval_id": 2,
+  "eval_name": "preview-script",
+  "configuration": "with_skill",
+  "expectations": [
+    {
+      "text": "明确提醒密钥文件不能提交到代码仓库，并给出 .gitignore 规则",
+      "passed": true,
+      "evidence": "答案在前置检查项中明确提醒密钥不能提交（第23-25行），给出了 .gitignore 规则：*.key 和 private.*.key，以及提到 CI/CD secrets 管理"
+    },
+    {
+      "text": "给出独立 Node.js 脚本，包含 ci.Project 创建、ci.preview 调用、二维码输出路径处理",
+      "passed": true,
+      "evidence": "脚本包含完整的 ci.Project 创建（145-151行）、ci.preview 调用（155-164行）、二维码输出路径处理（135行、160行）"
+    },
+    {
+      "text": "支持可选的 pagePath 和 searchQuery 环境变量",
+      "passed": true,
+      "evidence": "脚本使用环境变量读取 MP_PAGE_PATH 和 MP_SEARCH_QUERY（第79-80行），并在 preview 选项中使用展开运算符支持它们（第162-163行）"
+    },
+    {
+      "text": "给出 package.json scripts 示例",
+      "passed": true,
+      "evidence": "提供了 package.json scripts 配置示例，包括 ci:preview"
+    }
+  ]
+}

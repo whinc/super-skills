@@ -1,0 +1,37 @@
+{
+  "eval_id": 3,
+  "eval_name": "upload-script",
+  "configuration": "with_skill",
+  "expectations": [
+    {
+      "text": "明确列出前置条件：miniprogram-ci 安装、密钥获取、IP 白名单配置",
+      "passed": true,
+      "evidence": "答案列出了详细的前置条件：miniprogram-ci 安装、获取上传密钥（带 MP 平台路径说明）、IP 白名单配置、项目配置"
+    },
+    {
+      "text": "明确安全注意事项：密钥不能提交、.gitignore 规则、CI/CD secrets 管理",
+      "passed": true,
+      "evidence": "答案在第 35-41 行明确列出安全注意事项，包括：密钥不能提交（❌标记）、.gitignore 规则示例（*.key、private.*.key）、CI/CD secrets 管理（✅标记）、ci-artifacts 目录处理"
+    },
+    {
+      "text": "给出独立 Node.js 脚本，包含 ci.Project 创建、ci.upload 调用、结果落盘",
+      "passed": true,
+      "evidence": "脚本包含 ci.Project 创建（194-200行）、ci.upload 调用（215-222行）、结果落盘到 ci-artifacts/uploads/（85行、161行、229行）"
+    },
+    {
+      "text": "支持 --version 和 --desc 命令行参数",
+      "passed": true,
+      "evidence": "脚本在第 92-101 行解析命令行参数，支持 --version 和 --desc，在第 180-181 行进行验证"
+    },
+    {
+      "text": "支持 --pack-npm 可选参数，上传前执行 npm 构建",
+      "passed": true,
+      "evidence": "脚本在第 94 行支持 --pack-npm 参数，第 202-211 行条件执行 npm 构建"
+    },
+    {
+      "text": "给出 package.json scripts 示例",
+      "passed": true,
+      "evidence": "提供了 package.json scripts 配置示例，包括 ci:upload、ci:upload:npm，以及 CI/CD 集成示例（GitHub Actions）"
+    }
+  ]
+}

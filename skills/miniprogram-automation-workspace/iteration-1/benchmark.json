@@ -1,0 +1,118 @@
+{
+  "metadata": {
+    "skill_name": "miniprogram-automation",
+    "skill_path": "/Users/whincwu/WeChatProjects/wechat-miniprogram-skills/skills/miniprogram-automation",
+    "timestamp": "2026-03-07T20:40:00Z"
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "eval_name": "standalone-launch-assert-screenshot",
+      "configuration": "with_skill",
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3
+      },
+      "expectations": [
+        {"text": "答案明确提醒开启微信开发者工具的 CLI/HTTP 调用或服务端口安全设置。", "passed": true},
+        {"text": "答案给出独立 Node.js 脚本，并包含 automator.launch、miniProgram.reLaunch、page.waitFor、miniProgram.screenshot 和关闭流程。", "passed": true},
+        {"text": "答案把 projectPath 解释为开发者工具实际打开的目录，或提醒在构建型项目中可能需要指向 dist/build/miniprogram 等编译产物目录。", "passed": true}
+      ]
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "standalone-launch-assert-screenshot",
+      "configuration": "without_skill",
+      "result": {
+        "pass_rate": 0.67,
+        "passed": 2,
+        "failed": 1,
+        "total": 3
+      },
+      "expectations": [
+        {"text": "答案明确提醒开启微信开发者工具的 CLI/HTTP 调用或服务端口安全设置。", "passed": true},
+        {"text": "答案给出独立 Node.js 脚本，并包含 automator.launch、miniProgram.reLaunch、page.waitFor、miniProgram.screenshot 和关闭流程。", "passed": true},
+        {"text": "答案把 projectPath 解释为开发者工具实际打开的目录，或提醒在构建型项目中可能需要指向 dist/build/miniprogram 等编译产物目录。", "passed": false}
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "custom-component-form-input",
+      "configuration": "with_skill",
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3
+      },
+      "expectations": [
+        {"text": "答案明确说明 page.$ 或 page.$$ 不能直接穿透自定义组件边界。", "passed": true},
+        {"text": "答案给出先 page.$('form-panel') 再 panel.$('input') 的两段式定位示例。", "passed": true},
+        {"text": "答案区分读取原生输入框 value() 或 property('value') 与读取自定义组件实例 data() 的适用场景。", "passed": true}
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "custom-component-form-input",
+      "configuration": "without_skill",
+      "result": {
+        "pass_rate": 0.67,
+        "passed": 2,
+        "failed": 1,
+        "total": 3
+      },
+      "expectations": [
+        {"text": "答案明确说明 page.$ 或 page.$$ 不能直接穿透自定义组件边界。", "passed": true},
+        {"text": "答案给出先 page.$('form-panel') 再 panel.$('input') 的两段式定位示例。", "passed": true},
+        {"text": "答案区分读取原生输入框 value() 或 property('value') 与读取自定义组件实例 data() 的适用场景。", "passed": false}
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "request-mock-console-exception",
+      "configuration": "with_skill",
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3
+      },
+      "expectations": [
+        {"text": "答案给出独立脚本骨架，而不是默认切换成 Jest 用例。", "passed": true},
+        {"text": "答案优先使用 miniProgram.mockWxMethod('request', ...) 与 miniProgram.restoreWxMethod('request')。", "passed": true},
+        {"text": "答案包含 console 与 exception 监听，以及 finally 中的恢复和关闭清理流程。", "passed": true}
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "request-mock-console-exception",
+      "configuration": "without_skill",
+      "result": {
+        "pass_rate": 0.33,
+        "passed": 1,
+        "failed": 2,
+        "total": 3
+      },
+      "expectations": [
+        {"text": "答案给出独立脚本骨架，而不是默认切换成 Jest 用例。", "passed": false},
+        {"text": "答案优先使用 miniProgram.mockWxMethod('request', ...) 与 miniProgram.restoreWxMethod('request')。", "passed": false},
+        {"text": "答案包含 console 与 exception 监听，以及 finally 中的恢复和关闭清理流程。", "passed": true}
+      ]
+    }
+  ],
+  "summary": {
+    "with_skill": {
+      "average_pass_rate": 1.0,
+      "evals_passed": 3,
+      "evals_total": 3
+    },
+    "without_skill": {
+      "average_pass_rate": 0.556,
+      "evals_passed": 0,
+      "evals_total": 3
+    },
+    "delta": "+0.444"
+  }
+}

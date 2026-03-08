@@ -1,0 +1,25 @@
+{
+  "expectations": [
+    {
+      "text": "答案明确提醒开启微信开发者工具的 CLI/HTTP 调用或服务端口安全设置。",
+      "passed": true,
+      "evidence": "答案前置检查项第 3 条："已开启开发者工具安全设置 - 打开微信开发者工具后，确认：设置 → 安全设置 → 开启 CLI / HTTP 调用 或 服务端口"。"
+    },
+    {
+      "text": "答案给出独立 Node.js 脚本，并包含 automator.launch、miniProgram.reLaunch、page.waitFor、miniProgram.screenshot 和关闭流程。",
+      "passed": true,
+      "evidence": "脚本含有 automator.launch、miniProgram.reLaunch、page.waitFor(TITLE_SELECTOR)、page.waitFor(300)、miniProgram.screenshot、finally 中 miniProgram.close().catch()。"
+    },
+    {
+      "text": "答案把 projectPath 解释为开发者工具实际打开的目录，或提醒在构建型项目中可能需要指向 dist/build/miniprogram 等编译产物目录。",
+      "passed": true,
+      "evidence": "前置检查项第 1 条："projectPath 是微信开发者工具实际打开的目录 - 不要想当然地写成源码仓库根目录。原生小程序通常是包含 project.config.json / app.json 的目录；如果你用的是 Taro、uni-app 或自定义构建链，这里往往应该填开发者工具真正打开的产物目录，比如 dist/、build/、miniprogram/。""
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1.0
+  }
+}

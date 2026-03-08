@@ -1,0 +1,25 @@
+{
+  "expectations": [
+    {
+      "text": "答案明确提醒开启微信开发者工具的 CLI/HTTP 调用或服务端口安全设置。",
+      "passed": true,
+      "evidence": "答案在前置检查第 4 条："首启微信开发者工具时可能需要人工确认……这些问题不属于脚本本身逻辑"，但未直接说"安全设置"；注意事项第 3 条提及"请确认开发者工具已启动，且安全设置中已开启服务端口"。综合判定提及安全设置。"
+    },
+    {
+      "text": "答案给出独立 Node.js 脚本，并包含 automator.launch、miniProgram.reLaunch、page.waitFor、miniProgram.screenshot 和关闭流程。",
+      "passed": true,
+      "evidence": "脚本中含有 automator.launch、miniProgram.reLaunch、page.waitFor(POLL_INTERVAL)、saveScreenshot 尝试 miniProgram.screenshot 与 page.screenshot、finally 中 miniProgram.close()。"
+    },
+    {
+      "text": "答案把 projectPath 解释为开发者工具实际打开的目录，或提醒在构建型项目中可能需要指向 dist/build/miniprogram 等编译产物目录。",
+      "passed": false,
+      "evidence": "答案第 3 条前置检查项为："小程序项目路径正确 - projectPath 必须指向小程序项目根目录。该目录下通常应能看到 project.config.json 等项目文件。"没有明确说明构建型项目可能要指向编译产物目录。"
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 1,
+    "total": 3,
+    "pass_rate": 0.67
+  }
+}

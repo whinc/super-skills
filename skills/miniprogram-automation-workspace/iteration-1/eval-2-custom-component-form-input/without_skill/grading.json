@@ -1,0 +1,25 @@
+{
+  "expectations": [
+    {
+      "text": "答案明确说明 page.$ 或 page.$$ 不能直接穿透自定义组件边界。",
+      "passed": true,
+      "evidence": "答案章节"为什么不能直接用 `page.$` 选到组件内元素"明确写道：page.$ 的查询范围是页面层级……组件封装会隔离内部结构，页面层选择器不能把组件内部实现细节当成普通页面节点来抓。"
+    },
+    {
+      "text": "答案给出先 page.$('form-panel') 再 panel.$('input') 的两段式定位示例。",
+      "passed": true,
+      "evidence": "脚本中示例为：const panel = await page.$('form-panel'); const input = await panel.$('input')。"
+    },
+    {
+      "text": "答案区分读取原生输入框 value() 或 property('value') 与读取自定义组件实例 data() 的适用场景。",
+      "passed": false,
+      "evidence": "答案的验证方式说明两种都提到了，但表述侧重在"先校验 value()，再补充 data()"的建议，没有从 skill 角度明确指出 "data() 仅适用于自定义组件实例，原生 input 优先 value()"。两者混用时用户可能误解为 data() 也可用于原生输入框。"
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 1,
+    "total": 3,
+    "pass_rate": 0.67
+  }
+}

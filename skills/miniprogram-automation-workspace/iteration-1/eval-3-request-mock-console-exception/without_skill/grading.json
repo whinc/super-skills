@@ -1,0 +1,25 @@
+{
+  "expectations": [
+    {
+      "text": "答案给出独立脚本骨架，而不是默认切换成 Jest 用例。",
+      "passed": false,
+      "evidence": "脚本文件顶部注释 `request-mock-console-exception.spec.js`，内容用 Jest describe / beforeAll / afterAll / test 组织，不是独立脚本。"
+    },
+    {
+      "text": "答案优先使用 miniProgram.mockWxMethod('request', ...) 与 miniProgram.restoreWxMethod('request')。",
+      "passed": false,
+      "evidence": "答案使用 evaluate() 注入运行时 mock，替换 wx.request 为自定义函数，并在 afterAll 中也通过 evaluate 恢复。未使用官方 mockWxMethod/restoreWxMethod API。"
+    },
+    {
+      "text": "答案包含 console 与 exception 监听，以及 finally 中的恢复和关闭清理流程。",
+      "passed": true,
+      "evidence": "答案 beforeAll 里通过 miniProgram.on('console'/exception') 做监听；afterAll 里有 restoreRequestMock、unbindRuntimeEvents 与 miniProgram.close()。"
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 2,
+    "total": 3,
+    "pass_rate": 0.33
+  }
+}

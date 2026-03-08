@@ -1,0 +1,10 @@
+{
+  "eval_id": 1,
+  "eval_name": "standalone-launch-assert-screenshot",
+  "prompt": "我想写一个独立的 Node.js 自动化脚本，用 miniprogram-automator 打开微信开发者工具后 reLaunch 到 /pages/home/index，等待页面渲染完成，检查页面标题文案，再截一张图保存到 outputs 目录。请先说明前置检查项，再给完整脚本。",
+  "assertions": [
+    "答案明确提醒开启微信开发者工具的 CLI/HTTP 调用或服务端口安全设置。",
+    "答案给出独立 Node.js 脚本，并包含 automator.launch、miniProgram.reLaunch、page.waitFor、miniProgram.screenshot 和关闭流程。",
+    "答案把 projectPath 解释为开发者工具实际打开的目录，或提醒在构建型项目中可能需要指向 dist/build/miniprogram 等编译产物目录。"
+  ]
+}
