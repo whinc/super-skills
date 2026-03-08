@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "miniprogram-automation": {
+      "source": "/Users/whincwu/WeChatProjects/wechat-miniprogram-skills",
+      "sourceType": "local",
+      "computedHash": "c47c0301ee8cca103a6f8387c08e6ee0e50a3b6cedf657f757be0c68d28a0e92"
+    },
+    "miniprogram-ci": {
+      "source": "/Users/whincwu/WeChatProjects/wechat-miniprogram-skills",
+      "sourceType": "local",
+      "computedHash": "a61a019351b1100a78a59108519f02d84f2ca8da9c732fd093e9288a9b7f8edf"
+    }
+  }
+}
