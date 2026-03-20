@@ -1,0 +1,27 @@
+{
+  "eval_id": 1,
+  "eval_name": "user-profile-derived-state-and-key-reset",
+  "prompt": "帮我写一个 UserProfile 组件。它接收 userId 作为 prop，内部有一个评论输入框。当 userId 变化时，需要清空评论输入框的内容。同时需要显示用户的全名（由 firstName 和 lastName 拼接）。",
+  "assertions": [
+    {
+      "id": "no-useeffect-for-fullname",
+      "text": "fullName is computed during render (not via useEffect + setState)",
+      "type": "code_pattern"
+    },
+    {
+      "id": "no-useeffect-for-reset",
+      "text": "Component uses key prop (not useEffect) to reset state when userId changes",
+      "type": "code_pattern"
+    },
+    {
+      "id": "zero-useeffect",
+      "text": "The component contains zero useEffect calls (neither scenario requires one)",
+      "type": "code_pattern"
+    },
+    {
+      "id": "functional-completeness",
+      "text": "Component includes comment input field, firstName/lastName state, and fullName display",
+      "type": "functionality"
+    }
+  ]
+}

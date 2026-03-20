@@ -1,0 +1,27 @@
+{
+  "eval_name": "eval-3-toggle",
+  "variant": "without_skill",
+  "expectations": [
+    {
+      "text": "Toggle does NOT use useEffect to call onChange/onToggle after state change",
+      "passed": true,
+      "evidence": "No useEffect used for parent notification"
+    },
+    {
+      "text": "onChange is called in the same event handler as setIsOn (or component is fully controlled)",
+      "passed": true,
+      "evidence": "Found event handler pattern with both state update and parent callback"
+    },
+    {
+      "text": "Component is either fully controlled or updates parent in the click handler (not via Effect)",
+      "passed": true,
+      "evidence": "Hybrid with event handler notification"
+    },
+    {
+      "text": "Includes both Toggle component and a parent component demonstrating the communication pattern",
+      "passed": true,
+      "evidence": "Toggle:True, Parent:True"
+    }
+  ],
+  "pass_rate": 1.0
+}

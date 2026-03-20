@@ -1,0 +1,27 @@
+{
+  "eval_name": "eval-1-user-profile",
+  "variant": "without_skill",
+  "expectations": [
+    {
+      "text": "fullName is computed during render (not via useEffect + setState)",
+      "passed": true,
+      "evidence": "Found render-time fullName computation"
+    },
+    {
+      "text": "Component uses key prop (not useEffect) to reset state when userId changes",
+      "passed": false,
+      "evidence": "No key prop pattern found for state reset"
+    },
+    {
+      "text": "The component contains zero useEffect calls",
+      "passed": false,
+      "evidence": "Found 1 useEffect call(s)"
+    },
+    {
+      "text": "Component includes comment input field, firstName/lastName state, and fullName display",
+      "passed": true,
+      "evidence": "comment:True, names:True, fullName:True"
+    }
+  ],
+  "pass_rate": 0.5
+}

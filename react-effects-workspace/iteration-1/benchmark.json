@@ -1,0 +1,125 @@
+{
+  "skill_name": "react-effects",
+  "iteration": 1,
+  "configurations": [
+    {
+      "name": "with_skill",
+      "label": "With react-effects skill"
+    },
+    {
+      "name": "without_skill",
+      "label": "Without skill (baseline)"
+    }
+  ],
+  "evals": [
+    {
+      "eval_name": "eval-1-user-profile",
+      "description": "UserProfile: derived state + key reset",
+      "results": {
+        "with_skill": {
+          "pass_rate": 1.0,
+          "assertions": {
+            "total": 4,
+            "passed": 4,
+            "details": [
+              {"text": "fullName computed during render", "passed": true},
+              {"text": "Uses key prop for state reset", "passed": true},
+              {"text": "Zero useEffect calls", "passed": true},
+              {"text": "Functional completeness", "passed": true}
+            ]
+          }
+        },
+        "without_skill": {
+          "pass_rate": 0.5,
+          "assertions": {
+            "total": 4,
+            "passed": 2,
+            "details": [
+              {"text": "fullName computed during render", "passed": true},
+              {"text": "Uses key prop for state reset", "passed": false},
+              {"text": "Zero useEffect calls", "passed": false},
+              {"text": "Functional completeness", "passed": true}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "eval_name": "eval-2-product-list",
+      "description": "ProductList: derived filter + event handler notification + selection reset",
+      "results": {
+        "with_skill": {
+          "pass_rate": 1.0,
+          "assertions": {
+            "total": 4,
+            "passed": 4,
+            "details": [
+              {"text": "Filtered products via useMemo/direct computation", "passed": true},
+              {"text": "Notification in event handler", "passed": true},
+              {"text": "No useEffect for selection reset", "passed": true},
+              {"text": "Functional completeness", "passed": true}
+            ]
+          }
+        },
+        "without_skill": {
+          "pass_rate": 0.75,
+          "assertions": {
+            "total": 4,
+            "passed": 3,
+            "details": [
+              {"text": "Filtered products via useMemo/direct computation", "passed": true},
+              {"text": "Notification in event handler", "passed": true},
+              {"text": "No useEffect for selection reset", "passed": false},
+              {"text": "Functional completeness", "passed": true}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "eval_name": "eval-3-toggle",
+      "description": "Toggle: parent notification without Effect",
+      "results": {
+        "with_skill": {
+          "pass_rate": 1.0,
+          "assertions": {
+            "total": 4,
+            "passed": 4,
+            "details": [
+              {"text": "No useEffect for onChange", "passed": true},
+              {"text": "onChange in same event handler as setIsOn", "passed": true},
+              {"text": "Controlled or hybrid pattern", "passed": true},
+              {"text": "Functional completeness", "passed": true}
+            ]
+          }
+        },
+        "without_skill": {
+          "pass_rate": 1.0,
+          "assertions": {
+            "total": 4,
+            "passed": 4,
+            "details": [
+              {"text": "No useEffect for onChange", "passed": true},
+              {"text": "onChange in same event handler as setIsOn", "passed": true},
+              {"text": "Controlled or hybrid pattern", "passed": true},
+              {"text": "Functional completeness", "passed": true}
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "summary": {
+    "with_skill": {
+      "overall_pass_rate": 1.0,
+      "total_assertions": 12,
+      "total_passed": 12
+    },
+    "without_skill": {
+      "overall_pass_rate": 0.75,
+      "total_assertions": 12,
+      "total_passed": 9
+    },
+    "delta": "+25% pass rate improvement with skill"
+  }
+}

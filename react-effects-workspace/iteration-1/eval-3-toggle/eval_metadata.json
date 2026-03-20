@@ -1,0 +1,27 @@
+{
+  "eval_id": 3,
+  "eval_name": "toggle-parent-notification-pattern",
+  "prompt": "我正在做一个 Toggle 开关组件，它有自己的 isOn 状态，点击可以切换。父组件需要知道 toggle 的状态变化来更新其他 UI。请帮我实现 Toggle 组件和父组件的通信。",
+  "assertions": [
+    {
+      "id": "no-useeffect-for-onchange",
+      "text": "Toggle does NOT use useEffect to call onChange/onToggle after state change",
+      "type": "code_pattern"
+    },
+    {
+      "id": "event-handler-notification",
+      "text": "onChange is called in the same event handler as setIsOn (or component is fully controlled with no local state)",
+      "type": "code_pattern"
+    },
+    {
+      "id": "controlled-or-hybrid",
+      "text": "Component is either fully controlled (parent owns isOn) or updates parent in the click handler (not via Effect)",
+      "type": "code_pattern"
+    },
+    {
+      "id": "functional-completeness",
+      "text": "Includes both Toggle component and a parent component demonstrating the communication pattern",
+      "type": "functionality"
+    }
+  ]
+}

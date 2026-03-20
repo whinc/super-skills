@@ -1,0 +1,27 @@
+{
+  "eval_name": "eval-2-product-list",
+  "variant": "without_skill",
+  "expectations": [
+    {
+      "text": "Filtered products are computed during render (useMemo or direct computation), not via useEffect + setState",
+      "passed": true,
+      "evidence": "Uses useMemo/direct computation for filtering"
+    },
+    {
+      "text": "Cart notification is called inside an event handler, not in a useEffect",
+      "passed": false,
+      "evidence": "Notification found in useEffect"
+    },
+    {
+      "text": "Selection clearing on filter change is handled without useEffect",
+      "passed": true,
+      "evidence": "No useEffect for selection/cart reset"
+    },
+    {
+      "text": "Component renders filtered product list, supports click-to-add-to-cart, and shows notification",
+      "passed": true,
+      "evidence": "filter:True, cart:True, click:True"
+    }
+  ],
+  "pass_rate": 0.75
+}

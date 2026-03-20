@@ -1,0 +1,27 @@
+{
+  "eval_id": 2,
+  "eval_name": "product-list-derived-filter-and-event-handler",
+  "prompt": "我有一个 ProductList 组件，接收 products 数组和 filter 字符串，需要显示过滤后的商品。用户点击商品可以加入购物车并弹出通知。当 filter 变化时需要把选中的商品清空。请帮我实现这个组件。",
+  "assertions": [
+    {
+      "id": "no-useeffect-for-filter",
+      "text": "Filtered products are computed during render (useMemo or direct computation), not via useEffect + setState",
+      "type": "code_pattern"
+    },
+    {
+      "id": "notification-in-event-handler",
+      "text": "Cart notification (showNotification/toast/alert) is called inside an event handler, not in a useEffect",
+      "type": "code_pattern"
+    },
+    {
+      "id": "no-useeffect-for-selection-reset",
+      "text": "Selection clearing on filter/products change is handled by deriving selection from selectedId (not useEffect to setSelection(null))",
+      "type": "code_pattern"
+    },
+    {
+      "id": "functional-completeness",
+      "text": "Component renders filtered product list, supports click-to-add-to-cart, and shows notification",
+      "type": "functionality"
+    }
+  ]
+}

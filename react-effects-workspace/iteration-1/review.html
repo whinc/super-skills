@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "react-effects", "runs": [{"id": "eval-1-user-profile-with_skill", "prompt": "\u5e2e\u6211\u5199\u4e00\u4e2a UserProfile \u7ec4\u4ef6\u3002\u5b83\u63a5\u6536 userId \u4f5c\u4e3a prop\uff0c\u5185\u90e8\u6709\u4e00\u4e2a\u8bc4\u8bba\u8f93\u5165\u6846\u3002\u5f53 userId \u53d8\u5316\u65f6\uff0c\u9700\u8981\u6e05\u7a7a\u8bc4\u8bba\u8f93\u5165\u6846\u7684\u5185\u5bb9\u3002\u540c\u65f6\u9700\u8981\u663e\u793a\u7528\u6237\u7684\u5168\u540d\uff08\u7531 firstName \u548c lastName \u62fc\u63a5\uff09\u3002", "eval_id": 1, "outputs": [{"name": "UserProfile.tsx", "type": "text", "content": "import { useState } from \"react\";\n\n/**\n * UserProfile displays a user profile with a comment input.\n *\n * Key design decisions (following react-effects skill):\n *\n * 1. fullName is DERIVED STATE \u2014 computed during render, not via useEffect.\n *    (Skill Scenario 1: \"If a value can be calculated from existing props or\n *    state, it's not state at all \u2014 it's a render-time computation.\")\n *\n * 2. Comment input resets when userId changes via React's KEY mechanism,\n *    NOT via useEffect. The outer UserProfile passes `key={userId}` to the\n *    inner UserProfileInner component, so React unmounts/remounts it on\n *    userId change, automatically resetting all local state.\n *    (Skill Scenario 3: \"use React's key mechanism\" instead of\n *    \"useEffect(() => { setComment(''); }, [userId])\")\n */\n\ninterface UserProfileProps {\n  userId: string;\n  firstName: string;\n  lastName: string;\n}\n\n/**\n * Outer wrapper that provides the `key` prop to force state reset\n * when userId changes.\n */\nexport default function UserProfile({\n  userId,\n  firstName,\n  lastName,\n}: UserProfileProps) {\n  return (\n    <UserProfileInner\n      key={userId}\n      userId={userId}\n      firstName={firstName}\n      lastName={lastName}\n    />\n  );\n}\n\n/**\n * Inner component that holds the comment state.\n * Because the parent renders this with `key={userId}`,\n * React treats it as a new component instance when userId changes,\n * automatically resetting all local state (including `comment`).\n */\nfunction UserProfileInner({\n  userId,\n  firstName,\n  lastName,\n}: UserProfileProps) {\n  const [comment, setComment] = useState(\"\");\n\n  // Derived state: fullName is computed during render, not stored in state.\n  // No useEffect needed \u2014 this is a pure transformation of props.\n  const fullName = firstName + \" \" + lastName;\n\n  return (\n    <div className=\"user-profile\">\n      <h2>{fullName}</h2>\n      <p>User ID: {userId}</p>\n      <div className=\"comment-section\">\n        <label htmlFor=\"comment-input\">Comment:</label>\n        <input\n          id=\"comment-input\"\n          type=\"text\"\n          value={comment}\n          onChange={(e) => setComment(e.target.value)}\n          placeholder=\"Write a comment...\"\n        />\n      </div>\n    </div>\n  );\n}\n"}], "grading": {"eval_name": "eval-1-user-profile", "variant": "with_skill", "expectations": [{"text": "fullName is computed during render (not via useEffect + setState)", "passed": true, "evidence": "Found render-time fullName computation"}, {"text": "Component uses key prop (not useEffect) to reset state when userId changes", "passed": true, "evidence": "Found key={...Id} pattern"}, {"text": "The component contains zero useEffect calls", "passed": true, "evidence": "Zero useEffect calls found"}, {"text": "Component includes comment input field, firstName/lastName state, and fullName display", "passed": true, "evidence": "comment:True, names:True, fullName:True"}], "pass_rate": 1.0}}, {"id": "eval-1-user-profile-without_skill", "prompt": "\u5e2e\u6211\u5199\u4e00\u4e2a UserProfile \u7ec4\u4ef6\u3002\u5b83\u63a5\u6536 userId \u4f5c\u4e3a prop\uff0c\u5185\u90e8\u6709\u4e00\u4e2a\u8bc4\u8bba\u8f93\u5165\u6846\u3002\u5f53 userId \u53d8\u5316\u65f6\uff0c\u9700\u8981\u6e05\u7a7a\u8bc4\u8bba\u8f93\u5165\u6846\u7684\u5185\u5bb9\u3002\u540c\u65f6\u9700\u8981\u663e\u793a\u7528\u6237\u7684\u5168\u540d\uff08\u7531 firstName \u548c lastName \u62fc\u63a5\uff09\u3002", "eval_id": 1, "outputs": [{"name": "UserProfile.tsx", "type": "text", "content": "import { useState, useMemo, useEffect } from \"react\";\n\ninterface UserProfileProps {\n  userId: string;\n  firstName: string;\n  lastName: string;\n}\n\nexport default function UserProfile({\n  userId,\n  firstName,\n  lastName,\n}: UserProfileProps) {\n  const [comment, setComment] = useState(\"\");\n\n  // Reset the comment input when userId changes\n  useEffect(() => {\n    setComment(\"\");\n  }, [userId]);\n\n  // Derive full name from firstName and lastName\n  const fullName = useMemo(\n    () => `${firstName} ${lastName}`,\n    [firstName, lastName],\n  );\n\n  return (\n    <div className=\"user-profile\">\n      <h2>{fullName}</h2>\n      <textarea\n        value={comment}\n        onChange={(e) => setComment(e.target.value)}\n        placeholder=\"Write a comment...\"\n      />\n    </div>\n  );\n}\n"}], "grading": {"eval_name": "eval-1-user-profile", "variant": "without_skill", "expectations": [{"text": "fullName is computed during render (not via useEffect + setState)", "passed": true, "evidence": "Found render-time fullName computation"}, {"text": "Component uses key prop (not useEffect) to reset state when userId changes", "passed": false, "evidence": "No key prop pattern found for state reset"}, {"text": "The component contains zero useEffect calls", "passed": false, "evidence": "Found 1 useEffect call(s)"}, {"text": "Component includes comment input field, firstName/lastName state, and fullName display", "passed": true, "evidence": "comment:True, names:True, fullName:True"}], "pass_rate": 0.5}}, {"id": "eval-2-product-list-with_skill", "prompt": "\u6211\u6709\u4e00\u4e2a ProductList \u7ec4\u4ef6\uff0c\u63a5\u6536 products \u6570\u7ec4\u548c filter \u5b57\u7b26\u4e32\uff0c\u9700\u8981\u663e\u793a\u8fc7\u6ee4\u540e\u7684\u5546\u54c1\u3002\u7528\u6237\u70b9\u51fb\u5546\u54c1\u53ef\u4ee5\u52a0\u5165\u8d2d\u7269\u8f66\u5e76\u5f39\u51fa\u901a\u77e5\u3002\u5f53 filter \u53d8\u5316\u65f6\u9700\u8981\u628a\u9009\u4e2d\u7684\u5546\u54c1\u6e05\u7a7a\u3002\u8bf7\u5e2e\u6211\u5b9e\u73b0\u8fd9\u4e2a\u7ec4\u4ef6\u3002", "eval_id": 2, "outputs": [{"name": "ProductList.tsx", "type": "text", "content": "import { useState, useMemo, useCallback } from \"react\";\n\n// --- Types ---\n\nexport interface Product {\n  id: string;\n  name: string;\n  price: number;\n}\n\ninterface ProductListProps {\n  products: Product[];\n  filter: string;\n}\n\n// --- Notification helper (simple toast-style) ---\n\nfunction showNotification(message: string) {\n  // In a real app this would use a toast library; here we use a simple alert\n  // or a custom notification system.\n  if (typeof window !== \"undefined\") {\n    // Prefer a non-blocking approach if available\n    console.log(`[Notification] ${message}`);\n    alert(message);\n  }\n}\n\n// --- Cart state (local to this module for simplicity) ---\n\nconst cart: Product[] = [];\n\nfunction addToCart(product: Product) {\n  cart.push(product);\n}\n\n// --- Component ---\n\nexport default function ProductList({ products, filter }: ProductListProps) {\n  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());\n  const [prevFilter, setPrevFilter] = useState(filter);\n\n  // Scenario 4 (Adjusting Some State When a Prop Changes):\n  // When filter changes, clear the selection. This is a render-time state\n  // adjustment \u2014 no useEffect needed. React will re-render with the reset\n  // state immediately, so the user never sees stale selections.\n  if (filter !== prevFilter) {\n    setPrevFilter(filter);\n    setSelectedIds(new Set());\n  }\n\n  // Scenario 2 (Caching Expensive Computations):\n  // Filtered products are derived from props \u2014 compute during render.\n  // useMemo avoids recomputation when products/filter haven't changed.\n  const filteredProducts = useMemo(() => {\n    const lowerFilter = filter.toLowerCase();\n    return products.filter((product) =>\n      product.name.toLowerCase().includes(lowerFilter)\n    );\n  }, [products, filter]);\n\n  // Scenario 5 (Event-Specific Logic):\n  // Adding to cart and showing a notification are direct responses to\n  // user clicks \u2014 they belong in event handlers, not in Effects.\n  const handleAddToCart = useCallback((product: Product) => {\n    addToCart(product);\n    showNotification(`Added \"${product.name}\" to cart!`);\n  }, []);\n\n  const handleToggleSelect = useCallback((productId: string) => {\n    setSelectedIds((prev) => {\n      const next = new Set(prev);\n      if (next.has(productId)) {\n        next.delete(productId);\n      } else {\n        next.add(productId);\n      }\n      return next;\n    });\n  }, []);\n\n  return (\n    <div className=\"product-list\">\n      <h2>Products</h2>\n      {filter && (\n        <p className=\"filter-info\">\n          Filtering by: <strong>{filter}</strong>\n        </p>\n      )}\n\n      {filteredProducts.length === 0 ? (\n        <p className=\"empty-state\">No products match the current filter.</p>\n      ) : (\n        <ul>\n          {filteredProducts.map((product) => {\n            const isSelected = selectedIds.has(product.id);\n            return (\n              <li\n                key={product.id}\n                className={`product-item ${isSelected ? \"selected\" : \"\"}`}\n              >\n                <label>\n                  <input\n                    type=\"checkbox\"\n                    checked={isSelected}\n                    onChange={() => handleToggleSelect(product.id)}\n                  />\n                  <span className=\"product-name\">{product.name}</span>\n                  <span className=\"product-price\">\n                    ${product.price.toFixed(2)}\n                  </span>\n                </label>\n                <button\n                  type=\"button\"\n                  onClick={() => handleAddToCart(product)}\n                  className=\"add-to-cart-btn\"\n                >\n                  Add to Cart\n                </button>\n              </li>\n            );\n          })}\n        </ul>\n      )}\n\n      {selectedIds.size > 0 && (\n        <div className=\"selection-summary\">\n          <p>{selectedIds.size} product(s) selected</p>\n        </div>\n      )}\n    </div>\n  );\n}\n"}], "grading": {"eval_name": "eval-2-product-list", "variant": "with_skill", "expectations": [{"text": "Filtered products are computed during render (useMemo or direct computation), not via useEffect + setState", "passed": true, "evidence": "Uses useMemo/direct computation for filtering"}, {"text": "Cart notification is called inside an event handler, not in a useEffect", "passed": true, "evidence": "Notification triggered in event handler"}, {"text": "Selection clearing on filter change is handled without useEffect", "passed": true, "evidence": "No useEffect for selection/cart reset"}, {"text": "Component renders filtered product list, supports click-to-add-to-cart, and shows notification", "passed": true, "evidence": "filter:True, cart:True, click:True"}], "pass_rate": 1.0}}, {"id": "eval-2-product-list-without_skill", "prompt": "\u6211\u6709\u4e00\u4e2a ProductList \u7ec4\u4ef6\uff0c\u63a5\u6536 products \u6570\u7ec4\u548c filter \u5b57\u7b26\u4e32\uff0c\u9700\u8981\u663e\u793a\u8fc7\u6ee4\u540e\u7684\u5546\u54c1\u3002\u7528\u6237\u70b9\u51fb\u5546\u54c1\u53ef\u4ee5\u52a0\u5165\u8d2d\u7269\u8f66\u5e76\u5f39\u51fa\u901a\u77e5\u3002\u5f53 filter \u53d8\u5316\u65f6\u9700\u8981\u628a\u9009\u4e2d\u7684\u5546\u54c1\u6e05\u7a7a\u3002\u8bf7\u5e2e\u6211\u5b9e\u73b0\u8fd9\u4e2a\u7ec4\u4ef6\u3002", "eval_id": 2, "outputs": [{"name": "ProductList.tsx", "type": "text", "content": "import React, { useState, useEffect, useCallback, useMemo } from \"react\";\n\n// ---------- Types ----------\n\nexport interface Product {\n  id: string | number;\n  name: string;\n  price: number;\n  category?: string;\n}\n\nexport interface CartItem extends Product {\n  quantity: number;\n}\n\ninterface Notification {\n  id: number;\n  message: string;\n}\n\ninterface ProductListProps {\n  products: Product[];\n  filter: string;\n}\n\n// ---------- Notification Toast ----------\n\nfunction Toast({\n  notification,\n  onDismiss,\n}: {\n  notification: Notification;\n  onDismiss: (id: number) => void;\n}) {\n  useEffect(() => {\n    const timer = setTimeout(() => {\n      onDismiss(notification.id);\n    }, 2500);\n    return () => clearTimeout(timer);\n  }, [notification.id, onDismiss]);\n\n  return (\n    <div\n      role=\"status\"\n      style={{\n        padding: \"8px 16px\",\n        marginBottom: 8,\n        backgroundColor: \"#4caf50\",\n        color: \"#fff\",\n        borderRadius: 4,\n        boxShadow: \"0 2px 6px rgba(0,0,0,0.2)\",\n        animation: \"fadeIn 0.3s ease\",\n      }}\n    >\n      {notification.message}\n    </div>\n  );\n}\n\n// ---------- ProductList Component ----------\n\nconst ProductList: React.FC<ProductListProps> = ({ products, filter }) => {\n  const [cart, setCart] = useState<CartItem[]>([]);\n  const [notifications, setNotifications] = useState<Notification[]>([]);\n  const [notificationCounter, setNotificationCounter] = useState(0);\n\n  // Clear the cart whenever the filter changes\n  useEffect(() => {\n    setCart([]);\n  }, [filter]);\n\n  // Derived: filtered products based on the filter string\n  const filteredProducts = useMemo(() => {\n    if (!filter.trim()) return products;\n    const lowerFilter = filter.toLowerCase();\n    return products.filter(\n      (p) =>\n        p.name.toLowerCase().includes(lowerFilter) ||\n        (p.category && p.category.toLowerCase().includes(lowerFilter)),\n    );\n  }, [products, filter]);\n\n  // Dismiss a notification by id\n  const dismissNotification = useCallback((id: number) => {\n    setNotifications((prev) => prev.filter((n) => n.id !== id));\n  }, []);\n\n  // Add a product to the cart\n  const addToCart = useCallback(\n    (product: Product) => {\n      setCart((prev) => {\n        const existing = prev.find((item) => item.id === product.id);\n        if (existing) {\n          return prev.map((item) =>\n            item.id === product.id\n              ? { ...item, quantity: item.quantity + 1 }\n              : item,\n          );\n        }\n        return [...prev, { ...product, quantity: 1 }];\n      });\n\n      // Show notification\n      const id = notificationCounter + 1;\n      setNotificationCounter(id);\n      setNotifications((prev) => [\n        ...prev,\n        { id, message: `\"${product.name}\" \u5df2\u52a0\u5165\u8d2d\u7269\u8f66` },\n      ]);\n    },\n    [notificationCounter],\n  );\n\n  return (\n    <div style={{ position: \"relative\", fontFamily: \"sans-serif\" }}>\n      {/* Notifications */}\n      <div\n        style={{\n          position: \"fixed\",\n          top: 16,\n          right: 16,\n          zIndex: 1000,\n        }}\n      >\n        {notifications.map((n) => (\n          <Toast key={n.id} notification={n} onDismiss={dismissNotification} />\n        ))}\n      </div>\n\n      {/* Cart summary */}\n      <div\n        style={{\n          marginBottom: 16,\n          padding: 12,\n          backgroundColor: \"#f5f5f5\",\n          borderRadius: 8,\n        }}\n      >\n        <strong>\u8d2d\u7269\u8f66</strong>\n        {cart.length === 0 ? (\n          <span style={{ marginLeft: 8, color: \"#999\" }}>\uff08\u7a7a\uff09</span>\n        ) : (\n          <span style={{ marginLeft: 8 }}>\n            {cart.reduce((sum, item) => sum + item.quantity, 0)} \u4ef6\u5546\u54c1 | \u5408\u8ba1 \u00a5\n            {cart\n              .reduce((sum, item) => sum + item.price * item.quantity, 0)\n              .toFixed(2)}\n          </span>\n        )}\n      </div>\n\n      {/* Product list */}\n      {filteredProducts.length === 0 ? (\n        <p style={{ color: \"#999\", textAlign: \"center\", padding: 24 }}>\n          \u6ca1\u6709\u627e\u5230\u5339\u914d\u7684\u5546\u54c1\n        </p>\n      ) : (\n        <ul style={{ listStyle: \"none\", padding: 0, margin: 0 }}>\n          {filteredProducts.map((product) => (\n            <li\n              key={product.id}\n              style={{\n                display: \"flex\",\n                justifyContent: \"space-between\",\n                alignItems: \"center\",\n                padding: \"12px 16px\",\n                borderBottom: \"1px solid #eee\",\n              }}\n            >\n              <div>\n                <span style={{ fontWeight: 500 }}>{product.name}</span>\n                {product.category && (\n                  <span\n                    style={{ marginLeft: 8, color: \"#888\", fontSize: \"0.85em\" }}\n                  >\n                    [{product.category}]\n                  </span>\n                )}\n                <span style={{ marginLeft: 12, color: \"#e65100\" }}>\n                  \u00a5{product.price.toFixed(2)}\n                </span>\n              </div>\n              <button\n                onClick={() => addToCart(product)}\n                style={{\n                  padding: \"6px 14px\",\n                  backgroundColor: \"#1976d2\",\n                  color: \"#fff\",\n                  border: \"none\",\n                  borderRadius: 4,\n                  cursor: \"pointer\",\n                }}\n              >\n                \u52a0\u5165\u8d2d\u7269\u8f66\n              </button>\n            </li>\n          ))}\n        </ul>\n      )}\n    </div>\n  );\n};\n\nexport default ProductList;\n"}], "grading": {"eval_name": "eval-2-product-list", "variant": "without_skill", "expectations": [{"text": "Filtered products are computed during render (useMemo or direct computation), not via useEffect + setState", "passed": true, "evidence": "Uses useMemo/direct computation for filtering"}, {"text": "Cart notification is called inside an event handler, not in a useEffect", "passed": false, "evidence": "Notification found in useEffect"}, {"text": "Selection clearing on filter change is handled without useEffect", "passed": true, "evidence": "No useEffect for selection/cart reset"}, {"text": "Component renders filtered product list, supports click-to-add-to-cart, and shows notification", "passed": true, "evidence": "filter:True, cart:True, click:True"}], "pass_rate": 0.75}}, {"id": "eval-3-toggle-with_skill", "prompt": "\u6211\u6b63\u5728\u505a\u4e00\u4e2a Toggle \u5f00\u5173\u7ec4\u4ef6\uff0c\u5b83\u6709\u81ea\u5df1\u7684 isOn \u72b6\u6001\uff0c\u70b9\u51fb\u53ef\u4ee5\u5207\u6362\u3002\u7236\u7ec4\u4ef6\u9700\u8981\u77e5\u9053 toggle \u7684\u72b6\u6001\u53d8\u5316\u6765\u66f4\u65b0\u5176\u4ed6 UI\u3002\u8bf7\u5e2e\u6211\u5b9e\u73b0 Toggle \u7ec4\u4ef6\u548c\u7236\u7ec4\u4ef6\u7684\u901a\u4fe1\u3002", "eval_id": 3, "outputs": [{"name": "Toggle.tsx", "type": "text", "content": "import { useState, useCallback } from \"react\";\n\n// ============================================================\n// Toggle Component\n// ============================================================\n// Follows the react-effects skill guidance (Scenario 9):\n// Do NOT use useEffect to notify parent of state changes.\n// Instead, call the parent's onChange callback in the same\n// event handler that updates local state. React batches both\n// setState calls into a single render pass.\n// ============================================================\n\ninterface ToggleProps {\n  /** Callback invoked with the new toggle value whenever it changes */\n  onChange: (isOn: boolean) => void;\n  /** Optional initial state (defaults to false / off) */\n  initialOn?: boolean;\n  /** Optional label displayed next to the toggle */\n  label?: string;\n}\n\nfunction Toggle({ onChange, initialOn = false, label }: ToggleProps) {\n  const [isOn, setIsOn] = useState(initialOn);\n\n  // RIGHT pattern (from skill Scenario 9):\n  // Update local state AND notify parent in the same event handler.\n  // React batches both updates into a single render \u2014 no extra\n  // render cycle, no unpredictable update order.\n  function handleClick() {\n    const nextIsOn = !isOn;\n    setIsOn(nextIsOn);\n    onChange(nextIsOn); // Parent is notified in the same event batch\n  }\n\n  return (\n    <button\n      type=\"button\"\n      role=\"switch\"\n      aria-checked={isOn}\n      onClick={handleClick}\n      style={{\n        display: \"inline-flex\",\n        alignItems: \"center\",\n        gap: \"8px\",\n        padding: \"8px 16px\",\n        border: \"2px solid\",\n        borderColor: isOn ? \"#22c55e\" : \"#d1d5db\",\n        borderRadius: \"9999px\",\n        backgroundColor: isOn ? \"#22c55e\" : \"#e5e7eb\",\n        color: isOn ? \"#fff\" : \"#374151\",\n        cursor: \"pointer\",\n        fontSize: \"14px\",\n        fontWeight: 500,\n        transition: \"all 0.2s ease\",\n      }}\n    >\n      <span\n        style={{\n          display: \"inline-block\",\n          width: \"20px\",\n          height: \"20px\",\n          borderRadius: \"50%\",\n          backgroundColor: \"#fff\",\n          boxShadow: \"0 1px 3px rgba(0,0,0,0.2)\",\n          transform: isOn ? \"translateX(4px)\" : \"translateX(-4px)\",\n          transition: \"transform 0.2s ease\",\n        }}\n      />\n      {label && <span>{label}</span>}\n    </button>\n  );\n}\n\n// ============================================================\n// Parent Component\n// ============================================================\n// Demonstrates how the parent receives toggle state changes\n// through the onChange callback \u2014 no useEffect involved.\n// ============================================================\n\nfunction ParentComponent() {\n  const [isToggleOn, setIsToggleOn] = useState(false);\n\n  // This handler is called directly by Toggle's event handler,\n  // NOT by a useEffect reacting to state changes.\n  const handleToggleChange = useCallback((isOn: boolean) => {\n    setIsToggleOn(isOn);\n  }, []);\n\n  return (\n    <div style={{ padding: \"24px\", fontFamily: \"sans-serif\" }}>\n      <h2>Toggle Demo</h2>\n\n      <div style={{ marginBottom: \"16px\" }}>\n        <Toggle\n          onChange={handleToggleChange}\n          label=\"Enable notifications\"\n        />\n      </div>\n\n      <div\n        style={{\n          padding: \"16px\",\n          borderRadius: \"8px\",\n          backgroundColor: isToggleOn ? \"#f0fdf4\" : \"#fef2f2\",\n          border: `1px solid ${isToggleOn ? \"#bbf7d0\" : \"#fecaca\"}`,\n          color: isToggleOn ? \"#166534\" : \"#991b1b\",\n          transition: \"all 0.2s ease\",\n        }}\n      >\n        <p style={{ margin: 0 }}>\n          Notifications are currently{\" \"}\n          <strong>{isToggleOn ? \"ON\" : \"OFF\"}</strong>\n        </p>\n      </div>\n    </div>\n  );\n}\n\nexport { Toggle, ParentComponent };\nexport default ParentComponent;\n"}], "grading": {"eval_name": "eval-3-toggle", "variant": "with_skill", "expectations": [{"text": "Toggle does NOT use useEffect to call onChange/onToggle after state change", "passed": true, "evidence": "No useEffect used for parent notification"}, {"text": "onChange is called in the same event handler as setIsOn (or component is fully controlled)", "passed": true, "evidence": "Found event handler pattern with both state update and parent callback"}, {"text": "Component is either fully controlled or updates parent in the click handler (not via Effect)", "passed": true, "evidence": "Hybrid with event handler notification"}, {"text": "Includes both Toggle component and a parent component demonstrating the communication pattern", "passed": true, "evidence": "Toggle:True, Parent:True"}], "pass_rate": 1.0}}, {"id": "eval-3-toggle-without_skill", "prompt": "\u6211\u6b63\u5728\u505a\u4e00\u4e2a Toggle \u5f00\u5173\u7ec4\u4ef6\uff0c\u5b83\u6709\u81ea\u5df1\u7684 isOn \u72b6\u6001\uff0c\u70b9\u51fb\u53ef\u4ee5\u5207\u6362\u3002\u7236\u7ec4\u4ef6\u9700\u8981\u77e5\u9053 toggle \u7684\u72b6\u6001\u53d8\u5316\u6765\u66f4\u65b0\u5176\u4ed6 UI\u3002\u8bf7\u5e2e\u6211\u5b9e\u73b0 Toggle \u7ec4\u4ef6\u548c\u7236\u7ec4\u4ef6\u7684\u901a\u4fe1\u3002", "eval_id": 3, "outputs": [{"name": "Toggle.tsx", "type": "text", "content": "import { useState, useCallback } from \"react\";\n\n// \u2500\u2500\u2500 Toggle Component \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\ninterface ToggleProps {\n  /** Optional: controlled initial state */\n  defaultOn?: boolean;\n  /** Callback fired whenever the toggle state changes */\n  onToggle?: (isOn: boolean) => void;\n}\n\nfunction Toggle({ defaultOn = false, onToggle }: ToggleProps) {\n  const [isOn, setIsOn] = useState(defaultOn);\n\n  const handleClick = useCallback(() => {\n    setIsOn((prev) => {\n      const next = !prev;\n      onToggle?.(next);\n      return next;\n    });\n  }, [onToggle]);\n\n  return (\n    <button\n      type=\"button\"\n      role=\"switch\"\n      aria-checked={isOn}\n      onClick={handleClick}\n      className={`\n        relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center\n        rounded-full border-2 border-transparent transition-colors\n        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring\n        ${isOn ? \"bg-primary\" : \"bg-muted\"}\n      `}\n    >\n      <span\n        className={`\n          pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg\n          ring-0 transition-transform\n          ${isOn ? \"translate-x-5\" : \"translate-x-0.5\"}\n        `}\n      />\n    </button>\n  );\n}\n\n// \u2500\u2500\u2500 Parent Component \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nfunction ToggleDemo() {\n  const [notifications, setNotifications] = useState(false);\n  const [darkMode, setDarkMode] = useState(false);\n\n  return (\n    <div className=\"mx-auto max-w-sm space-y-6 p-6\">\n      <h2 className=\"text-lg font-semibold\">Settings</h2>\n\n      {/* Notifications toggle */}\n      <div className=\"flex items-center justify-between\">\n        <div>\n          <p className=\"text-sm font-medium\">Notifications</p>\n          <p className=\"text-xs text-muted-foreground\">\n            {notifications ? \"Enabled\" : \"Disabled\"}\n          </p>\n        </div>\n        <Toggle onToggle={setNotifications} />\n      </div>\n\n      {/* Dark mode toggle */}\n      <div className=\"flex items-center justify-between\">\n        <div>\n          <p className=\"text-sm font-medium\">Dark Mode</p>\n          <p className=\"text-xs text-muted-foreground\">\n            {darkMode ? \"On\" : \"Off\"}\n          </p>\n        </div>\n        <Toggle onToggle={setDarkMode} />\n      </div>\n\n      {/* Status display reacting to toggle state */}\n      <div className=\"rounded-md border p-3 text-sm\">\n        <p>\n          Notifications: <strong>{notifications ? \"ON\" : \"OFF\"}</strong>\n        </p>\n        <p>\n          Dark Mode: <strong>{darkMode ? \"ON\" : \"OFF\"}</strong>\n        </p>\n      </div>\n    </div>\n  );\n}\n\nexport { Toggle, ToggleDemo };\nexport default ToggleDemo;\n"}], "grading": {"eval_name": "eval-3-toggle", "variant": "without_skill", "expectations": [{"text": "Toggle does NOT use useEffect to call onChange/onToggle after state change", "passed": true, "evidence": "No useEffect used for parent notification"}, {"text": "onChange is called in the same event handler as setIsOn (or component is fully controlled)", "passed": true, "evidence": "Found event handler pattern with both state update and parent callback"}, {"text": "Component is either fully controlled or updates parent in the click handler (not via Effect)", "passed": true, "evidence": "Hybrid with event handler notification"}, {"text": "Includes both Toggle component and a parent component demonstrating the communication pattern", "passed": true, "evidence": "Toggle:True, Parent:True"}], "pass_rate": 1.0}}], "previous_feedback": {}, "previous_outputs": {}, "benchmark": {"skill_name": "react-effects", "iteration": 1, "configurations": [{"name": "with_skill", "label": "With react-effects skill"}, {"name": "without_skill", "label": "Without skill (baseline)"}], "evals": [{"eval_name": "eval-1-user-profile", "description": "UserProfile: derived state + key reset", "results": {"with_skill": {"pass_rate": 1.0, "assertions": {"total": 4, "passed": 4, "details": [{"text": "fullName computed during render", "passed": true}, {"text": "Uses key prop for state reset", "passed": true}, {"text": "Zero useEffect calls", "passed": true}, {"text": "Functional completeness", "passed": true}]}}, "without_skill": {"pass_rate": 0.5, "assertions": {"total": 4, "passed": 2, "details": [{"text": "fullName computed during render", "passed": true}, {"text": "Uses key prop for state reset", "passed": false}, {"text": "Zero useEffect calls", "passed": false}, {"text": "Functional completeness", "passed": true}]}}}}, {"eval_name": "eval-2-product-list", "description": "ProductList: derived filter + event handler notification + selection reset", "results": {"with_skill": {"pass_rate": 1.0, "assertions": {"total": 4, "passed": 4, "details": [{"text": "Filtered products via useMemo/direct computation", "passed": true}, {"text": "Notification in event handler", "passed": true}, {"text": "No useEffect for selection reset", "passed": true}, {"text": "Functional completeness", "passed": true}]}}, "without_skill": {"pass_rate": 0.75, "assertions": {"total": 4, "passed": 3, "details": [{"text": "Filtered products via useMemo/direct computation", "passed": true}, {"text": "Notification in event handler", "passed": true}, {"text": "No useEffect for selection reset", "passed": false}, {"text": "Functional completeness", "passed": true}]}}}}, {"eval_name": "eval-3-toggle", "description": "Toggle: parent notification without Effect", "results": {"with_skill": {"pass_rate": 1.0, "assertions": {"total": 4, "passed": 4, "details": [{"text": "No useEffect for onChange", "passed": true}, {"text": "onChange in same event handler as setIsOn", "passed": true}, {"text": "Controlled or hybrid pattern", "passed": true}, {"text": "Functional completeness", "passed": true}]}}, "without_skill": {"pass_rate": 1.0, "assertions": {"total": 4, "passed": 4, "details": [{"text": "No useEffect for onChange", "passed": true}, {"text": "onChange in same event handler as setIsOn", "passed": true}, {"text": "Controlled or hybrid pattern", "passed": true}, {"text": "Functional completeness", "passed": true}]}}}}], "summary": {"with_skill": {"overall_pass_rate": 1.0, "total_assertions": 12, "total_passed": 12}, "without_skill": {"overall_pass_rate": 0.75, "total_assertions": 12, "total_passed": 9}, "delta": "+25% pass rate improvement with skill"}}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>
