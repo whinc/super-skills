@@ -6,6 +6,11 @@
       "sourceType": "github",
       "computedHash": "88cec816d028de357ae7ede3ace36a2bc235a225e3e7d2bb18cdb5190ab6c482"
     },
+    "crafting-effective-readmes": {
+      "source": "softaworks/agent-toolkit",
+      "sourceType": "github",
+      "computedHash": "c931a8c22160e8925400778fcb2266b5d1df762f3052edba65f72479f79f2d6c"
+    },
     "miniprogram-automation": {
       "source": "/Users/whincwu/WeChatProjects/wechat-miniprogram-skills",
       "sourceType": "local",
