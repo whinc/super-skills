@@ -18,7 +18,9 @@
 # 安装整个仓库
 npx skills add whinc/super-skills
 
-# 只安装单个 skill
+# 安装单个 skill
+npx skills add whinc/super-skills --skill miniprogram-automation
+npx skills add whinc/super-skills --skill miniprogram-ci
 npx skills add whinc/super-skills --skill react-effects
 ```
 
