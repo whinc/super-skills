@@ -1,0 +1,23 @@
+{
+  "skill_name": "react-effects",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "帮我写一个 UserProfile 组件。它接收 userId 作为 prop，内部有一个评论输入框。当 userId 变化时，需要清空评论输入框的内容。同时需要显示用户的全名（由 firstName 和 lastName 拼接）。",
+      "expected_output": "应该使用 key={userId} 来重置组件状态，而不是 useEffect 监听 userId 变化后 setComment('')。fullName 应该直接在渲染时计算，而不是用 useEffect + useState。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "我有一个 ProductList 组件，接收 products 数组和 filter 字符串，需要显示过滤后的商品。用户点击商品可以加入购物车并弹出通知。当 filter 变化时需要把选中的商品清空。请帮我实现这个组件。",
+      "expected_output": "过滤后的商品列表应该用 useMemo 或直接计算，不应该 useEffect + setState。购物车通知应该在事件处理器中触发，不应该用 useEffect 监听 isInCart 状态。选中商品的清空应该通过存储 selectedId 并 derive selection 对象来实现，而不是 useEffect 监听 products 变化。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "我正在做一个 Toggle 开关组件，它有自己的 isOn 状态，点击可以切换。父组件需要知道 toggle 的状态变化来更新其他 UI。请帮我实现 Toggle 组件和父组件的通信。",
+      "expected_output": "不应该在 Toggle 组件中用 useEffect 监听 isOn 变化来调用 onChange。应该在 handleClick 事件处理器中同时调用 setIsOn 和 onChange。更好的方案是做成完全受控组件，由父组件管理 isOn 状态。",
+      "files": []
+    }
+  ]
+}
