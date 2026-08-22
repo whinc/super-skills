@@ -1,74 +1,61 @@
-# implement-tmux manifest 模板
+# implement-tmux 候选计划 / 可选 manifest
 
-manifest 是编排器的授权边界。使用绝对路径，`tickets` 数组顺序就是严格执行顺序。
+`implement-tmux` 默认直接读取 `/wayfinder` 的 `map.md` 或 `/to-tickets` 的 `spec.md`，运行时生成候选计划并在创建第一个 window 前请求一次确认。manifest 不是必填项；它适合保存已经确认的计划，或在恢复运行时复用。
+
+manifest 只描述调度边界，不配置任意 agent 命令，也不复制 `/implement` 的 TDD、typecheck、测试、review 或 commit 规则。agent 由 skill 在确认后自动探测。
 
 ```yaml
-project: /absolute/path/to/project
+project: "$PROJECT_ROOT"
 session: project-session
+# 可选；省略时由主窗口当前 pane 推断
+mainPane: '%42'
 maxRepairRounds: 2
 protectedPaths:
   - .claude/scheduled_tasks.lock
   - coverage/
-  - 用户已有未提交改动（启动时由基线记录）
+  - .scratch/runs/
+  # 启动时所有 modified、untracked、staged 路径自动加入保护基线
 tickets:
   - id: "01"
-    tracker: /absolute/path/to/issue-01.md
+    tracker: "$PROJECT_ROOT/docs/agents/issue-01.md"
+    # prompt/promptFile 可选；省略时从 tracker 和 map/spec 生成
     prompt: |
-      处理 ticket 01。只修改 allowedPaths，完成后写入 resultFile。
+      处理 ticket 01。只修改已确认的 allowedPaths。
     allowedPaths:
       - src/example.ts
       - src/example.test.ts
     verify:
       - npm test -- --runInBand
-    resultFile: /absolute/path/to/run/01.result.json
+    dependsOn: []
 
   - id: "02"
     dependsOn: ["01"]
-    tracker: /absolute/path/to/issue-02.md
-    promptFile: /absolute/path/to/issue-02-prompt.md
+    tracker: "$PROJECT_ROOT/docs/agents/issue-02.md"
     allowedPaths:
       - src/next.ts
     verify:
       - npm run typecheck
-    resultFile: /absolute/path/to/run/02.result.json
 ```
 
 ## 字段规则
 
-- `project` 必须存在且是目标 Git 工作区。
-- `session` 必须是已存在的 tmux session。
-- `tickets` 至少包含一项；每项 `id` 唯一，且 `prompt` 与 `promptFile` 二选一。
-- `allowedPaths`、`verify` 和 `resultFile` 必须明确。
-- `dependsOn` 用于依赖检查和恢复判断，不改变严格串行调度；同一时刻只运行一个 ticket。
-- `protectedPaths` 优先级高于 `allowedPaths`；发生重叠时暂停并请求用户处理。
-- `resultFile` 建议先写临时文件，再原子移动为最终文件，避免主窗口读取半成品。
+- `PROJECT_ROOT` 必须展开为目标 Git 工作区的绝对路径；`session` 必须是已存在的 tmux session。
+- `mainPane` 是接收 worker 终态消息的 pane；省略时必须在启动基线阶段从主窗口确定，不能猜测。
+- `tickets` 至少一项，`id` 唯一；数组顺序是严格执行顺序。`dependsOn` 只用于依赖检查和恢复判断，不改变串行规则。
+- `tracker`、`prompt/promptFile`、`allowedPaths`、`verify` 可以由 map/spec、tracker、项目结构和 package scripts 推断；推断不可靠时必须在确认前列为不确定项并阻塞，不得猜测。
+- `protectedPaths` 优先级高于 `allowedPaths`。启动时已有 modified、untracked、staged 路径自动加入保护边界；发生重叠时停止，不创建 worker window。
+- `verify` 必须是项目中可识别且可执行的验收命令。未知命令、缺少验收或缺少证据不能算通过。
+- `maxRepairRounds` 缺失时默认为 `2`。
+- 不支持 `agent`、任意 worker command 或 `resultFile` 字段。worker 只能使用自动探测的 CodeBuddy Code/Claude Code，并统一传入 `--permission-mode bypassPermissions`。
 
-## 结果文件协议
+## 终态消息协议
 
-agent 必须写入以下 JSON 结构，并在最后输出对应终态标记：
+worker 在自己的 agent 会话中显式调用 `/implement`，完成当前 ticket 后使用原生 tmux CLI 向 `mainPane` 发送**一次单行 JSON**。忙碌的主会话先输入消息，再发送 `Tab` 排队；不要创建结果文件：
 
 ```json
-{
-  "ticket": "01",
-  "status": "done",
-  "commit": "abc1234",
-  "changedFiles": ["src/example.ts"],
-  "verification": [
-    {
-      "command": "npm test -- --runInBand",
-      "result": "passed",
-      "evidence": ".scratch/runs/01-test.log"
-    }
-  ],
-  "evidence": [".scratch/runs/01-test.log"],
-  "summary": "完成当前 ticket 并通过验收"
-}
+{"event":"TICKET_DONE","ticket":"01","status":"done","commit":"abc1234","changedFiles":["src/example.ts"],"verification":[{"command":"npm test -- --runInBand","result":"passed","evidence":".scratch/runs/01-test.log"}],"evidence":[".scratch/runs/01-test.log"],"summary":"完成当前 ticket 并通过验收"}
 ```
 
-`status` 只能是 `done`、`failed` 或 `blocked`：
+`event` 只能是 `TICKET_DONE`、`TICKET_FAILED` 或 `TICKET_BLOCKED`；`status` 只能是 `done`、`failed` 或 `blocked`。失败或阻塞时 `commit` 可以为 `null`，但仍应提供已运行的验证、证据和具体原因。
 
-- `done`：代码和验收均通过，且有 commit/证据可供主窗口独立核验。
-- `failed`：代码、断言、配置、测试或产物失败。
-- `blocked`：tmux、DevTools、automator、外部构建或其他环境/工具不可用。
-
-主窗口只读取这个最终结果和必要的失败/阻塞取证，不读取 ticket 的持续过程输出。
+主窗口只用 `tmux capture-pane` 确认终态消息到达，然后独立核验 commit、changedFiles、staging、基线保护、验收和 evidence。缺失、格式错误或无法独立核验的消息不能解锁后续 ticket。

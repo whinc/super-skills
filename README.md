@@ -9,7 +9,7 @@
 | [miniprogram-automation](./skills/miniprogram-automation/SKILL.md) | 使用 `miniprogram-automator` 为微信小程序生成自动化脚本模板，覆盖页面跳转、元素交互、Mock、截图验证 |
 | [miniprogram-ci](./skills/miniprogram-ci/SKILL.md) | 使用 `miniprogram-ci` 为微信小程序生成 CI 脚本，覆盖 pack-npm、预览、上传流程 |
 | [react-effects](./skills/react-effects/SKILL.md) | 检测并修正 React useEffect 反模式，提供 12 种场景的正确替代方案 |
-| [implement-tmux](./skills/implement-tmux/SKILL.md) | 使用原生 `tmux` CLI 严格串行调度 ticket，消费结构化终态并独立核验 Git，失败或阻塞时停止链路 |
+| [implement-tmux](./skills/implement-tmux/SKILL.md) | 基于 map/spec 调度 CodeBuddy Code 或 Claude Code 在独立 tmux window 中串行调用 `/implement`，消费终态消息并独立核验 Git |
 
 ## 安装
 
