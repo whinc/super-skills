@@ -17,6 +17,7 @@ This repository is an independent collection, not a replacement for `mattpocock/
 | [miniprogram-automation](./skills/miniprogram-automation/SKILL.md) | Generate `miniprogram-automator` script templates for WeChat Mini Programs, including navigation, element interaction, mocks, and screenshot verification. |
 | [miniprogram-ci](./skills/miniprogram-ci/SKILL.md) | Generate CI scripts for WeChat Mini Programs, covering pack-npm, preview, and upload workflows. |
 | [react-effects](./skills/react-effects/SKILL.md) | Detect and correct React `useEffect` anti-patterns with practical alternatives for common scenarios. |
+| [eli12](./skills/eli12/SKILL.md) | Explain topics for curious 12-year-olds with clear visuals, short sections, and an HTML artifact. |
 | [implement-tmux](./skills/implement-tmux/SKILL.md) | Orchestrate CodeBuddy Code or Claude Code in strictly serial tmux windows, with each worker explicitly invoking `/implement` and the main window independently verifying Git. |
 
 ## Installation
@@ -31,6 +32,7 @@ npx skills add whinc/super-skills
 npx skills add whinc/super-skills --skill miniprogram-automation
 npx skills add whinc/super-skills --skill miniprogram-ci
 npx skills add whinc/super-skills --skill react-effects
+npx skills add whinc/super-skills --skill eli12
 npx skills add whinc/super-skills --skill implement-tmux
 ```
 
@@ -63,6 +65,7 @@ MIT
 | [miniprogram-automation](./skills/miniprogram-automation/SKILL.md) | 为微信小程序生成 `miniprogram-automator` 脚本模板，覆盖页面跳转、元素交互、Mock 和截图验证。 |
 | [miniprogram-ci](./skills/miniprogram-ci/SKILL.md) | 为微信小程序生成 CI 脚本，覆盖 pack-npm、预览和上传流程。 |
 | [react-effects](./skills/react-effects/SKILL.md) | 检测并修正 React `useEffect` 反模式，为常见场景提供实用替代方案。 |
+| [eli12](./skills/eli12/SKILL.md) | 面向好奇的 12 岁读者解释主题，使用清晰的视觉内容、简短段落和 HTML artifact。 |
 | [implement-tmux](./skills/implement-tmux/SKILL.md) | 在 tmux window 中严格串行调度 CodeBuddy Code 或 Claude Code；每个 worker 显式调用 `/implement`，主窗口独立核验 Git。 |
 
 ## 安装
@@ -77,6 +80,7 @@ npx skills add whinc/super-skills
 npx skills add whinc/super-skills --skill miniprogram-automation
 npx skills add whinc/super-skills --skill miniprogram-ci
 npx skills add whinc/super-skills --skill react-effects
+npx skills add whinc/super-skills --skill eli12
 npx skills add whinc/super-skills --skill implement-tmux
 ```
 

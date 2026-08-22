@@ -1,0 +1,23 @@
+{
+  "skill_name": "eli12",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "/eli12 用简单的方式解释 API 是什么",
+      "expected_output": "应面向没有先验知识的 12 岁读者，使用尊重且易懂的语言、一个具体类比和简洁的 HTML artifact；应解释 API 这个术语并给出关键概念回顾。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "请把 Git 分支解释得像给 12 岁孩子听，但不要使用幼儿化的语气。",
+      "expected_output": "应生成 HTML artifact，使用清晰的视觉模型或类比解释 Git 分支，定义必要术语，保持 12 岁读者能理解且不幼稚的语气。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "/eli12 <topic>",
+      "expected_output": "应将 $ARGUMENTS 替换为用户提供的主题，并生成大图少字、分段清晰的 HTML artifact，而不是直接输出面向成人的术语堆砌。",
+      "files": []
+    }
+  ]
+}
