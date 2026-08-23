@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""在隔离 tmux server 中验证会话、窗口和 pane 的生命周期。"""
+"""在隔离 tmux server 中验证固定 pane_id 路由和 fail-closed 行为。"""
 
 import os
 from pathlib import Path
@@ -70,6 +70,12 @@ class TmuxIntegrationTests(unittest.TestCase):
         )
         return result.stdout.splitlines()
 
+    def send_literal(self, pane_id, text, submit="Enter"):
+        self.tmux("capture-pane", "-p", "-t", pane_id, "-S", "-30")
+        self.tmux("send-keys", "-t", pane_id, "-l", "--", text)
+        self.tmux("capture-pane", "-p", "-t", pane_id, "-S", "-30")
+        self.tmux("send-keys", "-t", pane_id, submit)
+
     def test_worker_window_cleanup_preserves_main_session(self):
         self.tmux(
             "new-session",
@@ -83,40 +89,108 @@ class TmuxIntegrationTests(unittest.TestCase):
         self.tmux("has-session", "-t", self.session)
         baseline = self.list_windows()
         self.assertEqual(len(baseline), 1)
-        main_window, main_name, main_pane = baseline[0].split("\t")
+        main_window, main_name, mainPane = baseline[0].split("\t")
         self.assertEqual(main_name, "main")
-        self.wait_for(main_pane, "MAIN_READY")
+        self.wait_for(mainPane, "MAIN_READY")
 
-        self.tmux(
+        result = self.tmux(
             "new-window",
             "-d",
+            "-P",
+            "-F",
+            "#{window_id}\t#{pane_id}",
             "-t",
             self.session,
             "-n",
             "ticket-01",
             "sh -c 'printf WORKER_READY; IFS= read -r line; echo RECEIVED:$line; exec sleep 30'",
         )
+        worker_window, workerPane = result.stdout.strip().split("\t")
         windows = self.list_windows()
         self.assertEqual(len(windows), 2)
-        worker_window, worker_name, worker_pane = next(
-            row.split("\t") for row in windows if "\tticket-01\t" in row
-        )
-        self.assertEqual(worker_name, "ticket-01")
-        self.wait_for(worker_pane, "WORKER_READY")
+        self.assertIn(f"{worker_window}\tticket-01\t{workerPane}", windows)
+        self.wait_for(workerPane, "WORKER_READY")
 
-        self.tmux("capture-pane", "-p", "-t", worker_pane, "-S", "-30")
-        self.tmux("send-keys", "-t", worker_pane, "-l", "--", "hello-from-test")
-        self.tmux("capture-pane", "-p", "-t", worker_pane, "-S", "-30")
-        self.tmux("send-keys", "-t", worker_pane, "Enter")
-        self.wait_for(worker_pane, "RECEIVED:hello-from-test")
+        self.send_literal(workerPane, "hello-from-test")
+        self.wait_for(workerPane, "RECEIVED:hello-from-test")
 
-        self.tmux("capture-pane", "-p", "-t", worker_pane, "-S", "-30")
+        self.tmux("capture-pane", "-p", "-t", workerPane, "-S", "-30")
         self.tmux("kill-window", "-t", worker_window)
         remaining = self.list_windows()
         self.assertEqual(len(remaining), 1)
         self.assertEqual(remaining[0].split("\t")[0], main_window)
         self.assertEqual(remaining[0].split("\t")[1], "main")
         self.tmux("has-session", "-t", self.session)
+
+    def test_saved_pane_routes_after_rename_and_active_pane_change(self):
+        self.tmux(
+            "new-session",
+            "-d",
+            "-s",
+            self.session,
+            "-n",
+            "main",
+            "sh -c 'printf MAIN_READY; IFS= read -r line; echo MAIN_RECEIVED:$line; exec sleep 30'",
+        )
+        main_window, main_name, mainPane = self.list_windows()[0].split("\t")
+        self.assertEqual(main_name, "main")
+        self.wait_for(mainPane, "MAIN_READY")
+
+        worker_result = self.tmux(
+            "new-window",
+            "-d",
+            "-P",
+            "-F",
+            "#{window_id}\t#{pane_id}",
+            "-t",
+            self.session,
+            "-n",
+            "worker",
+            "sh -c 'printf WORKER_READY; IFS= read -r line; echo WORKER_RECEIVED:$line; exec sleep 30'",
+        )
+        worker_window, workerPane = worker_result.stdout.strip().split("\t")
+        self.wait_for(workerPane, "WORKER_READY")
+
+        aux_result = self.tmux(
+            "split-window",
+            "-d",
+            "-P",
+            "-F",
+            "#{pane_id}",
+            "-t",
+            worker_window,
+            "sh -c 'printf AUX_READY; exec sleep 30'",
+        )
+        auxPane = aux_result.stdout.strip()
+        self.wait_for(auxPane, "AUX_READY")
+
+        self.tmux("rename-window", "-t", main_window, "main-renamed")
+        self.tmux("rename-window", "-t", worker_window, "worker-renamed")
+        self.tmux("select-window", "-t", worker_window)
+        self.tmux("select-pane", "-t", auxPane)
+
+        self.send_literal(workerPane, "worker-after-rename")
+        self.wait_for(workerPane, "WORKER_RECEIVED:worker-after-rename")
+        self.assertNotIn("WORKER_RECEIVED:worker-after-rename", self.capture(mainPane))
+
+        self.send_literal(mainPane, "main-after-rename")
+        self.wait_for(mainPane, "MAIN_RECEIVED:main-after-rename")
+        self.assertNotIn("MAIN_RECEIVED:main-after-rename", self.capture(workerPane))
+        self.assertNotIn("MAIN_RECEIVED:main-after-rename", self.capture(auxPane))
+
+        # worker window 已失效；固定 pane_id 发送必须失败，且不能回退到当前活跃 auxPane。
+        self.tmux("kill-window", "-t", worker_window)
+        invalid = self.tmux(
+            "send-keys",
+            "-t",
+            workerPane,
+            "-l",
+            "--",
+            "must-not-reroute",
+            check=False,
+        )
+        self.assertNotEqual(invalid.returncode, 0)
+        self.assertNotIn("must-not-reroute", self.capture(mainPane))
 
 
 if __name__ == "__main__":

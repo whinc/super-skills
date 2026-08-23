@@ -14,32 +14,36 @@ disable-model-invocation: true
 
 ### tmux 写入协议（硬规则）
 
-**任何 tmux 写入操作前，先读取目标内容。**读取使用：
+**任何 tmux 发送或读取操作前，先校验目标 session 与 pane_id 有效，再读取目标内容。**校验必须确认 `#{session_name}` 等于 `$session` 且 `#{pane_id}` 等于已保存目标；任一校验失败即 `TICKET_BLOCKED`/失败并停止，不改发到活跃 pane 或窗口名称。读取使用：
 
 ```sh
-tmux capture-pane -p -t "$target" -S -30
+tmux has-session -t "$session"
+tmux display-message -p -t "$mainPane" '#{session_name}\t#{pane_id}'
+tmux capture-pane -p -t "$mainPane" -S -30
 ```
 
 以下写入都必须遵守该顺序：
 
-1. `new-window` 前读取 `mainPane`；创建后读取新 pane，再发送首次 prompt。
-2. 正文使用 `send-keys -l -- "$text"` 前读取目标 pane；写入正文后再次读取，再立即单独发送不带 `-l` 的提交键。`-l` 会把 `Enter` 或 `Tab` 当作字面文本输入。
-3. `kill-window` 前读取目标 pane。
+1. `new-window` 前读取已固定的 `mainPane` pane_id；创建后读取新 pane_id，再发送首次 prompt。
+2. 正文使用 `send-keys -l -- "$text"` 前读取目标 pane_id；写入正文后再次读取，再立即单独发送不带 `-l` 的提交键。`-l` 会把 `Enter` 或 `Tab` 当作字面文本输入。
+3. `kill-window` 前读取已保存 pane_id。目标 session 或 pane_id 无效时报告 `TICKET_BLOCKED`/失败并停止，不改发到其他 pane。
 
 提交键是发送动作的一部分，不能省略；它必须是独立的、不带 `-l` 的 `Enter` 或 `Tab`，不能拼进正文命令：
 
 ```sh
 # 新会话：正文后 Enter
+tmux has-session -t "$session"
+tmux display-message -p -t "$pane_id" '#{session_name}\t#{pane_id}'
 tmux capture-pane -p -t "$pane_id" -S -30
 tmux send-keys -t "$pane_id" -l -- "$prompt"
 tmux capture-pane -p -t "$pane_id" -S -30
 tmux send-keys -t "$pane_id" Enter
 
 # 忙碌会话或忙碌主窗口：正文后 Tab 排队
-tmux capture-pane -p -t "$target" -S -30
-tmux send-keys -t "$target" -l -- "$message"
-tmux capture-pane -p -t "$target" -S -30
-tmux send-keys -t "$target" Tab
+tmux capture-pane -p -t "$mainPane" -S -30
+tmux send-keys -t "$mainPane" -l -- "$message"
+tmux capture-pane -p -t "$mainPane" -S -30
+tmux send-keys -t "$mainPane" Tab
 ```
 
 提交后再次读取目标 pane，确认正文已离开输入框。若仍停留在输入框，先再次读取，再只重发同一个提交键一次，不重复正文；再次失败即 `TICKET_BLOCKED` 并保留 pane/window。
@@ -48,13 +52,19 @@ tmux send-keys -t "$target" Tab
 
 ### 1. 建立基线
 
-确认 `tmux`、目标 session 和项目存在，读取并记录真实 pane/window 与 Git 保护边界：
+确认 `tmux`、目标 session 和项目存在。`mainPane` 必须是显式提供的 pane_id，或仅在当前 pane 解析一次后立即固定；不得用空值或窗口名称兜底。随后验证 session 与 pane_id 仍有效并记录真实 pane/window 与 Git 保护边界：
 
 ```sh
 tmux -V
 tmux has-session -t "$session"
-main_pane="${mainPane:-$(tmux display-message -p '#{pane_id}')}"
-tmux display-message -p -t "$main_pane" '#{pane_id}'
+if [ "${mainPane+x}" != x ]; then
+  mainPane="$(tmux display-message -p '#{pane_id}')"
+fi
+[ -n "$mainPane" ] || { printf '%s\n' 'TICKET_BLOCKED: mainPane 为空' >&2; exit 1; }
+IFS=$'\t' read -r main_session mainPane <<EOF
+$(tmux display-message -p -t "$mainPane" '#{session_name}\t#{pane_id}')
+EOF
+[ "$main_session" = "$session" ] && [ -n "$mainPane" ] || { printf '%s\n' 'TICKET_BLOCKED: mainPane 无效' >&2; exit 1; }
 tmux list-windows -t "$session" -F '#{window_id}\t#{window_name}\t#{pane_id}'
 git -C "$project" status --short --untracked-files=all
 git -C "$project" diff --cached --name-only
@@ -68,30 +78,36 @@ git -C "$project" diff --cached --name-only
 
 从 map/spec、tracker、项目结构和 `package.json` scripts 推断每项的 `id`、顺序、依赖、`allowedPaths`、`verify` 和 tracker。无法可靠推断的项保持不确定并阻塞，不用默认路径或默认测试补齐。`maxRepairRounds` 缺省为 `2`。
 
-一次性展示并确认：project、session、`mainPane`、agent policy、ticket 顺序/依赖、范围、验收、不确定项、Git 基线、保护边界和 `maxRepairRounds`。确认前不创建 window、不启动 worker、不修改工作区。
+一次性展示并确认：project、session、固定且不可变的 `mainPane` pane_id、agent policy、ticket 顺序/依赖、范围、验收、不确定项、Git 基线、保护边界和 `maxRepairRounds`。确认前不创建 window、不启动 worker、不修改工作区。窗口标题/名称仅用于展示，不参与路由。
 
 确认后按 `codebuddy`、`codebuddy-code`、`cbc`、`claude` 顺序探测 CLI；前 3 个是等价的 CodeBuddy Code 命令，`claude` 是唯一 fallback。统一使用 `--permission-mode bypassPermissions`，并确认目标会话可调用 `/implement`。任一条件不满足都在创建 window 前阻塞。
 
 ### 3. 串行执行 ticket
 
-选取第一个依赖已完成且尚未核验为 `done` 的 ticket，只创建一个 window。创建前读取 `mainPane`：
+选取第一个依赖已完成且尚未核验为 `done` 的 ticket，只创建一个 window。创建前校验 session 与不可变的 `mainPane` pane_id，并读取 `mainPane`：
 
 ```sh
+tmux has-session -t "$session"
+tmux display-message -p -t "$mainPane" '#{session_name}\t#{pane_id}'
 tmux capture-pane -p -t "$mainPane" -S -30
-tmux new-window -d -t "$session" -n "ticket-<ID>" -c "$project" \
-  "$agent_command --permission-mode bypassPermissions"
-tmux display-message -p -t "$window_id" '#{pane_id}'
+new_window_record="$(tmux new-window -d -P -F '#{window_id}\t#{pane_id}' -t "$session" -n "ticket-<ID>" -c "$project" \
+  "$agent_command --permission-mode bypassPermissions")"
+IFS=$'\t' read -r window_id pane_id <<EOF
+$new_window_record
+EOF
+[ -n "$window_id" ] && [ -n "$pane_id" ] || { printf '%s\n' 'TICKET_BLOCKED: new-window 未返回 window_id/pane_id' >&2; exit 1; }
+tmux display-message -p -t "$pane_id" '#{session_name}\t#{pane_id}'
 tmux capture-pane -p -t "$pane_id" -S -30
 ```
 
-创建后保存新 window 的真实 `window_id`、`pane_id`，并在首次 `send-keys` 前读取新 pane。使用“正文后 Enter”协议发送自包含 prompt。prompt 必须包含 ticket、tracker、`allowedPaths`、`protectedPaths`、`verify`、`maxRepairRounds`、项目约束、`mainPane` 和终态协议，并要求 worker：
+创建后保存新 window 的真实 `window_id`、`pane_id`；后续发送、读取和终态回传始终使用保存的 pane_id，标题/重命名和当前活跃 pane/window 均不改变路由。目标 session 或 pane_id 无效时报告 `TICKET_BLOCKED`/失败并停止，不自动改发。首次 `send-keys` 前读取新 pane，使用“正文后 Enter”协议发送自包含 prompt。prompt 必须包含 ticket、tracker、`allowedPaths`、`protectedPaths`、`verify`、`maxRepairRounds`、项目约束、不可变的 `mainPane` pane_id 和终态协议，并要求 worker：
 
 - 只处理当前 ticket，不扩大范围，不触碰保护边界；
 - 显式调用 `/implement`，由其负责实现、TDD、typecheck、测试、review 和 commit；
-- 完成后只向 `mainPane` 发送一次终态 JSON，然后停止；
+- 完成后只向不可变的 `mainPane` pane_id 发送一次终态 JSON，然后停止；
 - 代码/测试/产物失败发送 `TICKET_FAILED`，工具/环境不可用发送 `TICKET_BLOCKED`。
 
-worker 回传主窗口时，先读取 `mainPane`，再用“正文后 Tab”协议发送 JSON。主窗口忙碌时同样使用 Tab 排队；不打断当前会话。
+worker 回传主窗口时，先验证 session 和不可变 `mainPane` pane_id，再读取该 pane，使用“正文后 Tab”协议发送 JSON。主窗口忙碌时同样使用 Tab 排队；不打断当前会话。若目标失效，报告 `TICKET_BLOCKED`/失败并停止，不发送到当前活跃 pane 或按标题改路由。
 
 状态只能按以下方向流转：
 
@@ -108,10 +124,11 @@ pending → running → verifying → done
 worker 只发送一行 JSON，格式见 `references/manifest-template.md`。预期到达后读取一次：
 
 ```sh
+tmux display-message -p -t "$mainPane" '#{session_name}\t#{pane_id}'
 tmux capture-pane -p -t "$mainPane" -S -30
 ```
 
-只解析匹配的终态，不轮询中间输出。收到 `TICKET_DONE` 后独立执行：
+只解析匹配的终态，不轮询中间输出。session 或 pane_id 校验失败即 `TICKET_BLOCKED`/失败，不回退到活跃 pane 或窗口名称。收到 `TICKET_DONE` 后独立执行：
 
 ```sh
 git -C "$project" status --short --untracked-files=all

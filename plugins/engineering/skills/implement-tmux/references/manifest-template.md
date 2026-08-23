@@ -5,7 +5,7 @@
 ```yaml
 project: "$PROJECT_ROOT"
 session: project-session
-# 可选；省略时从主窗口当前 pane 确定
+# 可选；省略时仅从启动时当前 pane 解析一次并立即固定
 mainPane: '%42'
 maxRepairRounds: 2
 protectedPaths:
@@ -36,18 +36,19 @@ tickets:
 ## 字段规则
 
 - `project` 必须是目标 Git 工作区绝对路径；`session` 必须已存在。
-- `mainPane` 是接收终态的 pane；省略时由启动基线确定，不能猜测。
+- `mainPane` 是启动时捕获并固定的接收终态 pane_id；显式值直接使用，省略时仅从当前 pane 解析一次。固定后不可重新解析、跟随活跃 pane 或按窗口标题改路由；为空或无效即 `TICKET_BLOCKED`/失败。
+- `pane_id` 是消息路由的唯一身份；窗口标题/名称只展示。重命名主窗口或 worker 窗口不影响已保存的 pane_id。
 - `tickets` 至少一项且 `id` 唯一；数组顺序是严格执行顺序，`dependsOn` 只用于检查和恢复。
 - `tracker`、`prompt`、`allowedPaths`、`verify` 可从 map/spec 和项目状态推断；不可靠时列为不确定项并阻塞。
 - `protectedPaths` 优先于 `allowedPaths`；启动时已有 Git 改动自动受保护，重叠即停止。
 - `verify` 必须是可识别、可执行且有 evidence 的验收命令；缺失或未知不能算通过。
 - `maxRepairRounds` 缺省为 `2`。
 - 不支持 `agent`、任意 worker command 或 `resultFile`；worker 由 skill 自动探测，并统一使用 `--permission-mode bypassPermissions`。
-- 任何 tmux 写入前先用 `tmux capture-pane -p -t <target> -S -30` 读取目标内容；正文使用 `-l -- "$text"` 写入，正文后再次读取，再单独发送不带 `-l` 的 `Enter`（新会话）或 `Tab`（忙碌会话/主窗口）。`-l` 会把提交键当作字面文本输入；提交后再次读取，失败时先读取，只重发提交键一次。
+- 任何 tmux 发送或读取前先校验目标 session 与已保存 pane_id；窗口标题/名称不参与路由，session 或 pane_id 无效即 `TICKET_BLOCKED`/失败且不改发。校验通过后用 `tmux capture-pane -p -t <pane_id> -S -30` 读取目标内容；正文使用 `-l -- "$text"` 写入，正文后再次读取，再单独发送不带 `-l` 的 `Enter`（新会话）或 `Tab`（忙碌会话/主窗口）。`-l` 会把提交键当作字面文本输入；提交后再次读取，失败时先读取，只重发提交键一次。
 
 ## 终态消息协议
 
-worker 在自己的 agent 会话中显式调用 `/implement`，完成 ticket 后向 `mainPane` 发送**一次单行 JSON**。主窗口忙碌时使用 Tab 排队：
+worker 在自己的 agent 会话中显式调用 `/implement`，完成 ticket 后仅向固定的 `mainPane` pane_id 发送**一次单行 JSON**。发送/读取前验证 session 与 pane_id；目标失效时 fail-closed，发送 `TICKET_BLOCKED`/失败且不改发到其他 pane。主窗口忙碌时使用 Tab 排队：
 
 ```json
 {"event":"TICKET_DONE","ticket":"01","status":"done","commit":"abc1234","changedFiles":["src/example.ts"],"verification":[{"command":"npm test -- --runInBand","result":"passed","evidence":".scratch/runs/01-test.log"}],"evidence":[".scratch/runs/01-test.log"],"summary":"完成当前 ticket 并通过验收"}
