@@ -14,8 +14,6 @@ This repository is an independent collection, not a replacement for `mattpocock/
 
 | Skill | Description |
 |------|-------------|
-| [miniprogram-automation](./skills/miniprogram-automation/SKILL.md) | Generate `miniprogram-automator` script templates for WeChat Mini Programs, including navigation, element interaction, mocks, and screenshot verification. |
-| [miniprogram-ci](./skills/miniprogram-ci/SKILL.md) | Generate CI scripts for WeChat Mini Programs, covering pack-npm, preview, and upload workflows. |
 | [react-effects](./skills/react-effects/SKILL.md) | Detect and correct React `useEffect` anti-patterns with practical alternatives for common scenarios. |
 | [eli12](./skills/eli12/SKILL.md) | Explain topics for curious 12-year-olds with clear visuals, short sections, and an HTML artifact. |
 | [implement-tmux](./skills/implement-tmux/SKILL.md) | Orchestrate CodeBuddy Code or Claude Code in strictly serial tmux windows, with each worker explicitly invoking `/implement` and the main window independently verifying Git. |
@@ -25,16 +23,31 @@ This repository is an independent collection, not a replacement for `mattpocock/
 Use the Skills CLI. See the [official CLI documentation](https://skills.sh/docs/cli) for the complete command reference.
 
 ```bash
-# Install the entire collection
-npx skills add whinc/super-skills
+# Install the collection for CodeBuddy Code from this repository
+npx skills add . -a codebuddy --yes
 
 # Install an individual skill
-npx skills add whinc/super-skills --skill miniprogram-automation
-npx skills add whinc/super-skills --skill miniprogram-ci
-npx skills add whinc/super-skills --skill react-effects
-npx skills add whinc/super-skills --skill eli12
-npx skills add whinc/super-skills --skill implement-tmux
+npx skills add . --skill react-effects
+npx skills add . --skill eli12
+npx skills add . --skill implement-tmux
 ```
+
+### Claude Code plugin
+
+Validate the local plugin manifest with:
+
+```bash
+claude plugin validate .
+```
+
+To install from the Git marketplace and receive updates when the repository changes:
+
+```text
+/plugin marketplace add whinc/super-skills
+/plugin install super-skills@super-skills
+```
+
+Add this marketplace from a Git source or local directory. Do not add the `marketplace.json` file through a direct URL, because Claude Code cannot resolve the relative `source: "./"` from a manifest-only download.
 
 ## Contributing
 
@@ -62,8 +75,6 @@ MIT
 
 | Skill | 描述 |
 |------|------|
-| [miniprogram-automation](./skills/miniprogram-automation/SKILL.md) | 为微信小程序生成 `miniprogram-automator` 脚本模板，覆盖页面跳转、元素交互、Mock 和截图验证。 |
-| [miniprogram-ci](./skills/miniprogram-ci/SKILL.md) | 为微信小程序生成 CI 脚本，覆盖 pack-npm、预览和上传流程。 |
 | [react-effects](./skills/react-effects/SKILL.md) | 检测并修正 React `useEffect` 反模式，为常见场景提供实用替代方案。 |
 | [eli12](./skills/eli12/SKILL.md) | 面向好奇的 12 岁读者解释主题，使用清晰的视觉内容、简短段落和 HTML artifact。 |
 | [implement-tmux](./skills/implement-tmux/SKILL.md) | 在 tmux window 中严格串行调度 CodeBuddy Code 或 Claude Code；每个 worker 显式调用 `/implement`，主窗口独立核验 Git。 |
@@ -73,16 +84,31 @@ MIT
 使用 Skills CLI 安装。完整命令参考请阅读[官方 CLI 文档](https://skills.sh/docs/cli)。
 
 ```bash
-# 安装整个集合
-npx skills add whinc/super-skills
+# 从当前仓库为 CodeBuddy Code 安装整个集合
+npx skills add . -a codebuddy --yes
 
 # 安装单个 skill
-npx skills add whinc/super-skills --skill miniprogram-automation
-npx skills add whinc/super-skills --skill miniprogram-ci
-npx skills add whinc/super-skills --skill react-effects
-npx skills add whinc/super-skills --skill eli12
-npx skills add whinc/super-skills --skill implement-tmux
+npx skills add . --skill react-effects
+npx skills add . --skill eli12
+npx skills add . --skill implement-tmux
 ```
+
+### Claude Code plugin
+
+使用以下命令校验本地 plugin manifest：
+
+```bash
+claude plugin validate .
+```
+
+通过 Git marketplace 安装，并在仓库发生变化时获取更新：
+
+```text
+/plugin marketplace add whinc/super-skills
+/plugin install super-skills@super-skills
+```
+
+请通过 Git 源或本地目录添加 marketplace。不要直接使用 `marketplace.json` 的 URL，因为仅下载 manifest 时，Claude Code 无法解析相对路径 `source: "./"`。
 
 ## 贡献
 
