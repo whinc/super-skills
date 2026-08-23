@@ -1,0 +1,13 @@
+{
+  "name": "super-skills",
+  "owner": {
+    "name": "whinc"
+  },
+  "plugins": [
+    {
+      "name": "super-skills",
+      "source": "./",
+      "description": "Reusable skills for AI coding agents"
+    }
+  ]
+}
