@@ -43,7 +43,7 @@ tickets:
 - `verify` 必须是可识别、可执行且有 evidence 的验收命令；缺失或未知不能算通过。
 - `maxRepairRounds` 缺省为 `2`。
 - 不支持 `agent`、任意 worker command 或 `resultFile`；worker 由 skill 自动探测，并统一使用 `--permission-mode bypassPermissions`。
-- 任何 tmux 写入前先用 `tmux capture-pane -p -t <target> -S -30` 读取目标内容；正文写入后再次读取，再单独发送 `Enter`（新会话）或 `Tab`（忙碌会话/主窗口），提交后再次读取。失败时先读取，只重发提交键一次。
+- 任何 tmux 写入前先用 `tmux capture-pane -p -t <target> -S -30` 读取目标内容；正文使用 `-l -- "$text"` 写入，正文后再次读取，再单独发送不带 `-l` 的 `Enter`（新会话）或 `Tab`（忙碌会话/主窗口）。`-l` 会把提交键当作字面文本输入；提交后再次读取，失败时先读取，只重发提交键一次。
 
 ## 终态消息协议
 

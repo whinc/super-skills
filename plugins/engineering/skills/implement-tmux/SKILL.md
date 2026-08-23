@@ -23,10 +23,10 @@ tmux capture-pane -p -t "$target" -S -30
 以下写入都必须遵守该顺序：
 
 1. `new-window` 前读取 `mainPane`；创建后读取新 pane，再发送首次 prompt。
-2. `send-keys -l -- "$text"` 前读取目标 pane；写入正文后，立即单独发送提交键。
+2. 正文使用 `send-keys -l -- "$text"` 前读取目标 pane；写入正文后再次读取，再立即单独发送不带 `-l` 的提交键。`-l` 会把 `Enter` 或 `Tab` 当作字面文本输入。
 3. `kill-window` 前读取目标 pane。
 
-提交键是发送动作的一部分，不能省略：
+提交键是发送动作的一部分，不能省略；它必须是独立的、不带 `-l` 的 `Enter` 或 `Tab`，不能拼进正文命令：
 
 ```sh
 # 新会话：正文后 Enter
@@ -80,9 +80,11 @@ git -C "$project" diff --cached --name-only
 tmux capture-pane -p -t "$mainPane" -S -30
 tmux new-window -d -t "$session" -n "ticket-<ID>" -c "$project" \
   "$agent_command --permission-mode bypassPermissions"
+tmux display-message -p -t "$window_id" '#{pane_id}'
+tmux capture-pane -p -t "$pane_id" -S -30
 ```
 
-保存新 window 的真实 `window_id`、`pane_id`。读取新 pane 后，使用“正文后 Enter”协议发送自包含 prompt。prompt 必须包含 ticket、tracker、`allowedPaths`、`protectedPaths`、`verify`、`maxRepairRounds`、项目约束、`mainPane` 和终态协议，并要求 worker：
+创建后保存新 window 的真实 `window_id`、`pane_id`，并在首次 `send-keys` 前读取新 pane。使用“正文后 Enter”协议发送自包含 prompt。prompt 必须包含 ticket、tracker、`allowedPaths`、`protectedPaths`、`verify`、`maxRepairRounds`、项目约束、`mainPane` 和终态协议，并要求 worker：
 
 - 只处理当前 ticket，不扩大范围，不触碰保护边界；
 - 显式调用 `/implement`，由其负责实现、TDD、typecheck、测试、review 和 commit；
@@ -125,7 +127,7 @@ git -C "$project" diff-tree --no-commit-id --name-only -r <commit>
 独立核验通过后，关闭本次创建的真实 window；关闭前先读取其 pane：
 
 ```sh
-tmux capture-pane -p -t "$window_id" -S -30
+tmux capture-pane -p -t "$pane_id" -S -30
 tmux kill-window -t "$window_id"
 tmux list-windows -t "$session" -F '#{window_id}\t#{window_name}\t#{pane_id}'
 ```
@@ -134,4 +136,14 @@ tmux list-windows -t "$session" -F '#{window_id}\t#{window_name}\t#{pane_id}'
 
 ## 最小验证
 
-发布或修改后执行确定性的命令转录检查，至少证明：每个 `send-keys`（正文和提交键）前都有 `capture-pane`，正文写入后再读取并发送独立的 `send-keys Enter` 或 `send-keys Tab`；`new-window` 和 `kill-window` 前也有读取。没有真实 fixture 时，只报告转录检查通过，不声称真实 tmux 运行时通过。
+发布或修改后运行以下测试，全部通过才能合并：
+
+```sh
+# 静态协议回归：检查 session/window/pane 顺序和提交键规则
+python3 evals/test_tmux_protocol.py
+
+# 真实 tmux 集成：验证隔离 server 中的窗口生命周期和 Enter 提交
+python3 evals/test_tmux_integration.py
+```
+
+静态测试不依赖 tmux。集成测试未安装 tmux 时自动跳过；运行时使用独立 socket、随机 session 和 `-f /dev/null`，并只清理测试创建的 server，不操作默认 session 或既有窗口。
