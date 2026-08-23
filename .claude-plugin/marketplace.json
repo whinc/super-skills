@@ -1,13 +1,24 @@
 {
   "name": "super-skills",
+  "description": "Selectable skills for web development, engineering workflows, and learning",
   "owner": {
     "name": "whinc"
   },
   "plugins": [
     {
-      "name": "super-skills",
-      "source": "./",
-      "description": "Reusable skills for AI coding agents"
+      "name": "web",
+      "source": "./plugins/web",
+      "description": "Web development skills"
+    },
+    {
+      "name": "engineering",
+      "source": "./plugins/engineering",
+      "description": "Engineering workflow skills"
+    },
+    {
+      "name": "learning",
+      "source": "./plugins/learning",
+      "description": "Learning and explanation skills"
     }
   ]
 }
