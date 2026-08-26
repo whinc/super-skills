@@ -32,19 +32,9 @@ tickets:
     status: pending
 ```
 
-## 输入映射
+## 来源
 
-- `direct-task`：主 Agent 从用户描述生成 `id`、目标、依赖、范围、验证和 tracker，经确认后创建 team。
-- `wayfinder-map`：`source` 指向 `map.md`；读取同目录 `issues/NN-*.md`，按 `docs/agents/issue-tracker.md` 解析 `Type:`、`Status:`、`Blocked by:`。sub agent 只调用 `/wayfinder`，持续探索并将每个 issue 更新为 `Status: resolved`；全部 child issue resolved 才完成。
-- `spec-tickets`：`source` 指向 `spec.md`；逐个读取 `.scratch/<feature>/issues/NN-*.md`，保留 spec 验收、范围、依赖和 tracker 映射，不把 spec 当作 ticket。sub agent 先调用 `/implement`。
-
-## 调度约束
-
-- `dependsOn` 是 DAG；主 Agent 只释放前置 ticket 已核验为 `done` 的任务。
-- 同轮候选若 `allowedPaths` 相同、存在父子路径、glob 交集或范围不确定，禁止并行；其它 ready task 最大化并发。
-- AgentTeam 成员共享上下文、状态和 evidence；主 Agent 是唯一派发和解锁者。
-- 失败/阻塞由主 Agent 写入共享上下文并通知成员，只沿依赖后代传播 `blocked`；独立分支继续。恢复需用户批准。
-- 代码 ticket 需独立 commit、`changedFiles`、verification 和 evidence；map issue 需 Answer、tracker `resolved` 和探索 evidence。
+本文件只定义 manifest 字段和完整终态协议。输入分支、DAG 调度、失败传播和核验规则分别由主 `SKILL.md` 及其对应 reference 定义。
 
 ## 终态协议
 

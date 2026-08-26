@@ -140,6 +140,10 @@ class FastIntegrationTests(unittest.TestCase):
     def setUp(self):
         self.skill = Path(__file__).parents[1] / "SKILL.md"
         self.skill_text = self.skill.read_text()
+        self.reference_text = {
+            path.name: path.read_text()
+            for path in sorted((self.skill.parent / "references").glob("*.md"))
+        }
 
     def test_direct_task_is_drafted_and_confirmed_before_team(self):
         tickets = direct_draft("实现用户描述的功能")
@@ -147,7 +151,9 @@ class FastIntegrationTests(unittest.TestCase):
         self.assertEqual(tickets[1].depends_on, ["01"])
         self.assertTrue(all(ticket.goal and ticket.allowed_paths and ticket.verify and ticket.tracker for ticket in tickets))
         self.assertTrue(all("/implement" in ticket.prompt for ticket in tickets))
-        self.assertIn("用户确认后才创建 AgentTeam", self.skill_text)
+        self.assertIn("references/direct-task.md", self.skill_text)
+        self.assertIn("用户确认后才创建 AgentTeam", self.reference_text["direct-task.md"])
+        self.assertIn("/implement", self.reference_text["direct-task.md"])
 
     def test_wayfinder_map_reads_issues_and_resolves_all(self):
         files = {
@@ -158,11 +164,12 @@ class FastIntegrationTests(unittest.TestCase):
         tickets = parse_wayfinder(files)
         self.assertEqual([ticket.depends_on for ticket in tickets], [[], ["01"], ["01", "02"]])
         self.assertEqual(tickets[0].status, "resolved")
-        self.assertIn("Status:", self.skill_text)
-        self.assertIn("所有 child issue 的 tracker `Status:` 都为 `resolved`", self.skill_text)
-        self.assertIn("所有 child issue 的 tracker `Status:` 都为 `resolved`", self.skill_text)
-        self.assertIn("sub agent 只调用 `/wayfinder`", self.skill_text)
-        self.assertIn("map 的完成条件", self.skill_text)
+        self.assertIn("references/wayfinder-map.md", self.skill_text)
+        wayfinder = self.reference_text["wayfinder-map.md"]
+        self.assertIn("Status:", wayfinder)
+        self.assertIn("所有 child issue 的 tracker `Status:` 都为 `resolved`", wayfinder)
+        self.assertIn("sub agent 只调用 `/wayfinder`", wayfinder)
+        self.assertIn("map 的完成条件", wayfinder)
 
     def test_spec_and_tickets_preserve_constraints_and_mapping(self):
         spec = "# Spec\n## Testing Decisions\n验收必须运行 typecheck。"
@@ -174,7 +181,9 @@ class FastIntegrationTests(unittest.TestCase):
         self.assertEqual(tickets[1].depends_on, ["01"])
         self.assertTrue(all("acceptance=True" in ticket.prompt for ticket in tickets))
         self.assertTrue(all(ticket.tracker.startswith("issues/") for ticket in tickets))
-        self.assertIn("不把一个 spec 当成一个 ticket", self.skill_text)
+        self.assertIn("references/spec-tickets.md", self.skill_text)
+        self.assertIn("不把一个 spec 当成一个 ticket", self.reference_text["spec-tickets.md"])
+        self.assertIn("/implement", self.reference_text["spec-tickets.md"])
 
     def test_parses_real_to_tickets_dependency_formats(self):
         self.assertEqual(parse_blocked_by("**Blocked by:** None (can start immediately)"), [])
@@ -220,11 +229,21 @@ class FastIntegrationTests(unittest.TestCase):
         self.assertIn("主 Agent 收到失败/阻塞", self.skill_text)
 
     def test_sub_agents_use_input_specific_skill_and_cannot_unlock(self):
-        self.assertGreaterEqual(self.skill_text.count("/implement"), 4)
-        self.assertIn("sub agent 只调用 `/wayfinder`", self.skill_text)
-        self.assertIn("map 的完成条件", self.skill_text)
+        self.assertIn("/implement", self.reference_text["direct-task.md"])
+        self.assertNotIn("/wayfinder", self.reference_text["direct-task.md"])
+        self.assertIn("/implement", self.reference_text["spec-tickets.md"])
+        self.assertNotIn("/wayfinder", self.reference_text["spec-tickets.md"])
+        self.assertIn("/wayfinder", self.reference_text["wayfinder-map.md"])
+        self.assertNotIn("/implement", self.reference_text["wayfinder-map.md"])
         self.assertIn("sub agent 不解锁后继任务", self.skill_text)
         self.assertIn("独立核验", self.skill_text)
+        manifest = self.reference_text["manifest-template.md"]
+        self.assertIn("references/manifest-template.md", self.skill_text)
+        self.assertIn("## 终态协议", manifest)
+        self.assertIn("TICKET_DONE", manifest)
+        self.assertIn("TICKET_FAILED", manifest)
+        self.assertIn("TICKET_BLOCKED", manifest)
+        self.assertNotIn('{"event":"TICKET_DONE"', self.skill_text)
 
 
 if __name__ == "__main__":

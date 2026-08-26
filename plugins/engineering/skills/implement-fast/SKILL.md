@@ -1,6 +1,6 @@
 ---
 name: implement-fast
-description: "使用 AgentTeam 按依赖安全并发处理直接任务、map issues 或 spec tickets：direct/spec 调用 /implement，map 只调用 /wayfinder；主 Agent 负责协调和核验。"
+description: "使用 AgentTeam 按依赖安全并发处理直接任务、map issues 或 spec tickets：按输入分支读取对应 reference，主 Agent 负责协调和核验。"
 disable-model-invocation: true
 ---
 
@@ -8,30 +8,17 @@ disable-model-invocation: true
 
 ## 目标
 
-把一个用户任务或一组 issue/ticket 转成依赖图，由主 Agent 通过原生 `TeamCreate` 创建一个 AgentTeam 并安全并发执行。成员共享（shared）任务上下文、状态和证据；主 Agent 是唯一 coordinator、派发者和解锁者。
+把一个用户任务或一组 issue/ticket 转成依赖图，由主 Agent 通过原生 `TeamCreate` 创建一个 AgentTeam 并安全并发执行。成员共享（shared）team 上下文、状态和证据；主 Agent 是唯一 coordinator、派发者和解锁者。
 
-技能分流：
+## 输入分流
 
-- `direct-task`、`spec-tickets`：sub agent 先调用 `/implement`，再执行实现任务。
-- `wayfinder-map`：sub agent 只调用 `/wayfinder`，持续探索直到 issue/ticket 可解决并变为 `resolved`。
+一次只处理一种输入；同时发现多种来源时，请用户选择。识别输入后，只读取对应的分支 reference，再执行本文件的共享协议：
 
-## 输入
+- `direct-task`：用户直接给出待实现目标，读取 `references/direct-task.md`；
+- `wayfinder-map`：输入包含 `map.md` 及其 issue map，读取 `references/wayfinder-map.md`；
+- `spec-tickets`：输入包含 `spec.md` 与实现 tickets，读取 `references/spec-tickets.md`。
 
-一次只处理一种输入；同时发现多种来源时，请用户选择。
-
-### direct-task
-
-从用户描述生成并展示 ticket 草案。每项必须有：`id`、目标、`dependsOn`、`allowedPaths`、验证命令、`tracker`、执行 skill 和 evidence 位置。用户确认后才创建 AgentTeam。
-
-### wayfinder-map
-
-读取指定 `map.md`、同目录 `issues/`，按 `docs/agents/issue-tracker.md` 解析 `Type:`、`Status:` 和 `Blocked by:`。每个 child issue 是独立任务；保留原文、已有答案和 tracker 路径。
-
-sub agent 只调用 `/wayfinder`，持续探索代码、文档和依赖，直到当前 issue 有足够答案。随后按 issue 类型写入 `## Answer`，更新 `Status: resolved`，并把探索证据写入共享 team 上下文。主 Agent 核验 tracker 和证据后，才把 issue 记为 `done` 并释放后继依赖。map 的完成条件是所有 child issue 的 tracker `Status:` 都为 `resolved`。
-
-### spec-tickets
-
-读取 `spec.md` 和 `.scratch/<feature>/issues/NN-*.md` 的每个 ticket；保留 spec 的验收约束、范围、依赖和 tracker 映射，不把一个 spec 当成一个 ticket。每个 ticket 的 sub agent 先调用 `/implement`，并接收 spec 约束、ticket 原文、`allowedPaths`、验证命令和终态协议。
+`references/manifest-template.md` 是 manifest 和完整终态格式的唯一来源；需要终态字段或 JSON 示例时读取它。
 
 ## 计划门禁
 
@@ -48,10 +35,10 @@ sub agent 只调用 `/wayfinder`，持续探索代码、文档和依赖，直到
 - issue/ticket 原文、目标、类型、唯一 ID 和 tracker；
 - 已完成依赖及保护边界；
 - `allowedPaths`、`verify`、evidence 和 `maxRepairRounds`；
-- 对应 skill：direct/spec 调用 `/implement`；map 只调用 `/wayfinder` 并持续探索至 `resolved`；
+- 对应输入 reference 指定的 skill：direct/spec 调用 `/implement`；map 只调用 `/wayfinder` 并持续探索至 `resolved`；
 - 当前任务范围、终态格式和 tracker 更新要求。
 
-sub agent 只处理当前任务并报告一次终态。终态为 `TICKET_DONE`、`TICKET_FAILED` 或 `TICKET_BLOCKED`，至少包含 `ticket`、`status`、`commit`、`changedFiles`、`verification`、`evidence`、`summary`；失败/阻塞另含 `reason`。缺失、重复、格式错误、ID 不匹配或异常退出均由主 Agent fail-closed，保留现场。
+sub agent 只处理当前任务并报告一次终态。终态事件只能是 `TICKET_DONE`、`TICKET_FAILED` 或 `TICKET_BLOCKED`，至少包含 `ticket`、`status`、`commit`、`changedFiles`、`verification`、`evidence`、`summary`；失败/阻塞另含 `reason`。完整字段和 JSON 示例见 `references/manifest-template.md`。缺失、重复、格式错误、ID 不匹配或异常退出均由主 Agent fail-closed，保留现场。
 
 ## DAG 调度
 
@@ -83,10 +70,3 @@ sub agent 不解锁后继任务。只有主 Agent 完成核验后，ticket 才�
 ## 收尾
 
 主 Agent 回收已完成 team task，保留共享上下文和 evidence，并汇总每项的 tracker、状态、commit、changedFiles、verification、evidence、失败/阻塞原因和未完成依赖。已完成任务不重复启动。
-
-修改后运行：
-
-```sh
-python3 evals/test_fast_protocol.py
-python3 evals/test_fast_integration.py
-```
