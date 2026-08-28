@@ -19,8 +19,8 @@ map.md 同目录 `issues/` TeamCreate AgentTeam
 唯一 coordinator 派发者 解锁者 独立核验者 /wayfinder
 探索或地图补充 ## Answer Status: resolved evidence
 代码实现/配置变更 blocked 不自动调用实现技能
-DAG allowedPaths 只沿依赖后代传播 独立核验 fail-closed
-确认前不创建 team 不确定 禁止并行 docs/agents/agent-team-protocol.md
+DAG maxConcurrency 只沿依赖后代传播 独立核验 fail-closed
+确认前不创建 team 不确定 全量并发 docs/agents/agent-team-protocol.md
 references/map-issues.md references/manifest-template.md
 """.replace(" disable-model", "disable-model")
 
@@ -72,8 +72,8 @@ class WayfinderTeamProtocolTests(unittest.TestCase):
 
     def test_requires_confirmation_and_path_safety(self):
         self.assertNotEqual(self.run_checker(VALID.replace("确认前不创建 team", "直接创建 team")).returncode, 0)
-        self.assertNotEqual(self.run_checker(VALID.replace("allowedPaths", "paths")).returncode, 0)
-        self.assertNotEqual(self.run_checker(VALID.replace("不确定 禁止并行", "自由并行")).returncode, 0)
+        self.assertNotEqual(self.run_checker(VALID.replace("maxConcurrency", "并发无上限")).returncode, 0)
+        self.assertNotEqual(self.run_checker(VALID.replace("不确定 全量并发", "自由并行")).returncode, 0)
 
 
 if __name__ == "__main__":

@@ -12,7 +12,6 @@ class Issue:
     issue_id: str
     status: str = "claimed"
     depends_on: list[str] = field(default_factory=list)
-    allowed_paths: list[str] = field(default_factory=list)
 
 
 def parse_blocked(text: str) -> list[str]:
@@ -27,7 +26,7 @@ def parse_issues(files: dict[str, str]) -> list[Issue]:
     for path, text in sorted(files.items()):
         match = re.search(r"(?:^|/)\s*(\d{2})-", path)
         status = re.search(r"^Status:\s*(\w+)", text, re.MULTILINE)
-        issues.append(Issue(match.group(1), status.group(1) if status else "claimed", parse_blocked(text), ["docs/" + match.group(1) + ".md"]))
+        issues.append(Issue(match.group(1), status.group(1) if status else "claimed", parse_blocked(text)))
     return issues
 
 
@@ -35,21 +34,15 @@ def can_resolve(issue_text: str, evidence: list[str]) -> bool:
     return "## Answer" in issue_text and re.search(r"^Status:\s*resolved$", issue_text, re.MULTILINE) is not None and bool(evidence)
 
 
-def ready_round(issues: list[Issue], resolved: set[str]) -> list[Issue]:
+def ready_round(issues: list[Issue], resolved: set[str], max_concurrency: int = 4) -> list[Issue]:
     selected = []
     for issue in issues:
+        if len(selected) >= max_concurrency:
+            break
         if issue.status == "resolved" or issue.issue_id in resolved or not set(issue.depends_on) <= resolved:
             continue
-        if all(not conflict(a, b) for other in selected for a in issue.allowed_paths for b in other.allowed_paths):
-            selected.append(issue)
+        selected.append(issue)
     return selected
-
-
-def conflict(left: str, right: str) -> bool:
-    if any(char in left + right for char in "*?["):
-        return True
-    left_parts, right_parts = Path(left).parts, Path(right).parts
-    return left_parts[:len(right_parts)] == right_parts or right_parts[:len(left_parts)] == left_parts
 
 
 def propagate_failure(issues: list[Issue], failed: str) -> set[str]:
@@ -99,12 +92,15 @@ class WayfinderTeamIntegrationTests(unittest.TestCase):
         self.assertIn("确认前不创建 team", self.skill)
         self.assertIn("确认后才创建一个原生 `AgentTeam`", self.skill)
 
-    def test_dag_and_path_conflict_protection(self):
-        issues = [Issue("01", allowed_paths=["src/a.ts"]), Issue("02", allowed_paths=["src/b.ts"]), Issue("03", depends_on=["01"], allowed_paths=["src/c.ts"]), Issue("04", depends_on=["01"], allowed_paths=["src/c.ts"])]
-        self.assertEqual([issue.issue_id for issue in ready_round(issues, set())], ["01", "02"])
-        self.assertEqual([issue.issue_id for issue in ready_round(issues, {"01"})], ["02", "03"])
-        self.assertIn("allowedPaths", self.skill)
-        self.assertIn("禁止并行", self.skill)
+    def test_dag_maximizes_concurrency_within_cap_without_path_checks(self):
+        issues = [Issue("01"), Issue("02"), Issue("03"), Issue("04"), Issue("05"), Issue("06")]
+        self.assertEqual([issue.issue_id for issue in ready_round(issues, set())], ["01", "02", "03", "04"])
+        self.assertEqual([issue.issue_id for issue in ready_round(issues, set(), max_concurrency=2)], ["01", "02"])
+        gated = [Issue("01"), Issue("02"), Issue("03", depends_on=["01"]), Issue("04", depends_on=["01"])]
+        self.assertEqual([issue.issue_id for issue in ready_round(gated, set())], ["01", "02"])
+        self.assertEqual([issue.issue_id for issue in ready_round(gated, {"01"})], ["02", "03", "04"])
+        self.assertIn("maxConcurrency", self.skill)
+        self.assertNotIn("allowedPaths", self.skill)
 
     def test_failure_only_blocks_descendants(self):
         issues = [Issue("01"), Issue("02", depends_on=["01"]), Issue("03", depends_on=["02"]), Issue("04")]

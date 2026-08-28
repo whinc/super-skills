@@ -26,7 +26,7 @@ REQUIRED = (
     "blocked",
     "不自动调用实现技能",
     "DAG",
-    "allowedPaths",
+    "maxConcurrency",
     "只沿依赖后代传播",
     "独立核验",
     "fail-closed",
@@ -56,8 +56,8 @@ def check_protocol(text: str) -> list[str]:
     for legacy in LEGACY:
         if legacy.lower() in text.lower():
             errors.append(f"包含已移除名称：{legacy}")
-    if "不确定" not in text or "禁止并行" not in text:
-        errors.append("缺少不确定范围的并发保护")
+    if "不确定" not in text or "全量并发" not in text:
+        errors.append("缺少上限内全量并发调度与不确定范围标记")
     if "确认前" not in text or "不创建 team" not in text:
         errors.append("缺少确认前不得创建 team 的门禁")
     return errors

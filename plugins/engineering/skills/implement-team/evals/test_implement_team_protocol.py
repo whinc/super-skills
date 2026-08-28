@@ -18,9 +18,9 @@ description: PRD spec implementation
 PRD spec.md .scratch/<feature>/issues/ direct-task TeamCreate AgentTeam
 唯一 coordinator 派发者 解锁者 独立核验者
 冲突矩阵无冲突等待用户确认 没有任何实现 tickets 只完成输入评估并停止
-确认前不创建 team 唯一执行单元 /implement dependsOn allowedPaths DAG
+确认前不创建 team 唯一执行单元 /implement dependsOn CONFLICT maxConcurrency DAG
 只沿依赖后代传播 独立核验 fail-closed Status: resolved evidence
-docs/agents/agent-team-protocol.md 不确定 禁止并行
+docs/agents/agent-team-protocol.md 不确定 全量并发
 references/prd-spec.md references/direct-task.md references/manifest-template.md
 """.replace(" disable-model", "disable-model")
 
@@ -71,7 +71,7 @@ class ImplementTeamProtocolTests(unittest.TestCase):
         self.assertNotEqual(self.run_checker(VALID.replace("没有任何实现 tickets", "有 tickets")).returncode, 0)
 
     def test_requires_implement_and_safety_fields(self):
-        for old, new in (("/implement", "手工实现"), ("dependsOn", "dependency"), ("allowedPaths", "paths"), ("fail-closed", "开放通过")):
+        for old, new in (("/implement", "手工实现"), ("dependsOn", "dependency"), ("CONFLICT", "自由并行"), ("fail-closed", "开放通过")):
             with self.subTest(old=old):
                 self.assertNotEqual(self.run_checker(VALID.replace(old, new)).returncode, 0)
 

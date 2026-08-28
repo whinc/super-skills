@@ -4,7 +4,7 @@
 
 ## 读取与映射
 
-保留 PRD/spec 的范围、验收、非目标和约束，读取每个 ticket 的原文、`Status:`、`Blocked by:`/`dependsOn`、`allowedPaths`、验证命令、tracker 和 evidence。ticket ID 必须唯一，依赖必须存在且无环。没有 tickets 时只评估并停止。
+保留 PRD/spec 的范围、验收、非目标和约束，读取每个 ticket 的原文、`Status:`、`Blocked by:`/`dependsOn`、验证命令、tracker 和 evidence。ticket ID 必须唯一，依赖必须存在且无环。没有 tickets 时只评估并停止。
 
 ## 合并与确认
 

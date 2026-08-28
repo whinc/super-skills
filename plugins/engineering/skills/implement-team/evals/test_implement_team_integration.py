@@ -11,7 +11,6 @@ import unittest
 class Ticket:
     ticket_id: str
     depends_on: list[str] = field(default_factory=list)
-    allowed_paths: list[str] = field(default_factory=list)
     status: str = "pending"
 
 
@@ -26,7 +25,7 @@ def parse_tickets(files: dict[str, str]) -> list[Ticket]:
     result = []
     for path, text in sorted(files.items()):
         match = re.search(r"(?:^|/)\s*(\d{2})-", path)
-        result.append(Ticket(match.group(1), parse_dependencies(text), ["src/" + match.group(1) + ".ts"]))
+        result.append(Ticket(match.group(1), parse_dependencies(text)))
     return result
 
 
@@ -39,20 +38,14 @@ def merge_sources(prd: str | None, spec: str | None) -> dict[str, object]:
     return {"sources": [source for source, value in (("prd.md", prd), ("spec.md", spec)) if value], "conflicts": conflicts, "needs_confirmation": True}
 
 
-def path_conflict(left: str, right: str) -> bool:
-    if any(char in left + right for char in "*?["):
-        return True
-    left_parts, right_parts = Path(left).parts, Path(right).parts
-    return left_parts[:len(right_parts)] == right_parts or right_parts[:len(left_parts)] == left_parts
-
-
-def ready_round(tickets: list[Ticket], completed: set[str]) -> list[Ticket]:
+def ready_round(tickets: list[Ticket], completed: set[str], max_concurrency: int = 4) -> list[Ticket]:
     selected = []
     for ticket in tickets:
+        if len(selected) >= max_concurrency:
+            break
         if ticket.status != "pending" or ticket.ticket_id in completed or not set(ticket.depends_on) <= completed:
             continue
-        if all(not path_conflict(a, b) for other in selected for a in ticket.allowed_paths for b in other.allowed_paths):
-            selected.append(ticket)
+        selected.append(ticket)
     return selected
 
 
@@ -98,12 +91,16 @@ class ImplementTeamIntegrationTests(unittest.TestCase):
     def test_confirmation_precedes_team_creation(self):
         self.assertLess(self.skill.index("确认前不创建 team"), self.skill.index("只有确认后才创建一个 `AgentTeam`"))
 
-    def test_dag_maximizes_safe_concurrency_and_blocks_conflicting_paths(self):
-        tickets = [Ticket("01", allowed_paths=["src/a.ts"]), Ticket("02", allowed_paths=["src/b.ts"]), Ticket("03", ["01"], ["src/c.ts"]), Ticket("04", ["01"], ["src/c.ts"])]
-        self.assertEqual([ticket.ticket_id for ticket in ready_round(tickets, set())], ["01", "02"])
-        self.assertEqual([ticket.ticket_id for ticket in ready_round(tickets, {"01"})], ["02", "03"])
-        self.assertIn("allowedPaths", self.skill)
-        self.assertIn("禁止并行", self.skill)
+    def test_dag_maximizes_concurrency_within_cap_without_path_checks(self):
+        tickets = [Ticket("01"), Ticket("02"), Ticket("03"), Ticket("04"), Ticket("05"), Ticket("06")]
+        self.assertEqual([ticket.ticket_id for ticket in ready_round(tickets, set())], ["01", "02", "03", "04"])
+        self.assertEqual([ticket.ticket_id for ticket in ready_round(tickets, set(), max_concurrency=2)], ["01", "02"])
+        gated = [Ticket("01"), Ticket("02"), Ticket("03", ["01"]), Ticket("04", ["01"])]
+        self.assertEqual([ticket.ticket_id for ticket in ready_round(gated, set())], ["01", "02"])
+        self.assertEqual([ticket.ticket_id for ticket in ready_round(gated, {"01"})], ["02", "03", "04"])
+        self.assertIn("CONFLICT", self.skill)
+        self.assertIn("maxConcurrency", self.skill)
+        self.assertNotIn("allowedPaths", self.skill)
 
     def test_failure_only_propagates_to_descendants(self):
         tickets = [Ticket("01"), Ticket("02", ["01"]), Ticket("03", ["02"]), Ticket("04")]
