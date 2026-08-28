@@ -1,6 +1,6 @@
 ---
 name: wayfinder-team
-description: "针对 map.md 及同目录 issues 的团队探索编排：经确认后用原生 AgentTeam 安全并发派发 /wayfinder 并核验 Answer 与状态。"
+description: "针对 map.md 及同目录 issues 的并发探索编排：AgentTeam 并发派发 /wayfinder 提速，context 卫生防主 Agent 膨胀掉质量；经用户确认后启动并核验 Answer 与状态。"
 disable-model-invocation: true
 ---
 

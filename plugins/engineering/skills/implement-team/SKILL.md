@@ -1,6 +1,6 @@
 ---
 name: implement-team
-description: "针对 PRD/spec 与 .scratch/<feature>/issues/ 实现 tickets 的团队实施编排：经用户确认后用原生 AgentTeam 安全并发派发 /implement。"
+description: "针对 PRD/spec 与 .scratch/<feature>/issues/ 实现 tickets 的并发实施编排：AgentTeam 并发派发 /implement 提速，context 卫生防主 Agent 膨胀掉质量；经用户确认后启动。"
 disable-model-invocation: true
 ---
 
