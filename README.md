@@ -1,113 +1,49 @@
-# AI Skills Collection
+# super-skills
 
-A collection of reusable skills that give AI coding agents focused knowledge for specific engineering tasks. The skills follow the [Skills](https://github.com/vercel-labs/skills) specification and can be installed with the Skills CLI.
+一套可复用的 [AI agent skill](https://github.com/vercel-labs/skills) 集合，为特定工程任务提供聚焦的领域知识。所有 skill 遵循 [Skills 规范](https://skills.sh/docs/cli)，按插件分组组织，可通过 Skills CLI 或 Claude Code 插件市场安装。
 
-## Relationship to mattpocock/skills
+## Skill 一览
 
-This repository is an independent collection, not a replacement for `mattpocock/skills`.
-
-- `mattpocock/skills` provides the single-ticket `/implement` workflow, including the implementation, testing, review, and commit process.
-- `implement-team` is the PRD/spec implementation orchestration layer. After confirmation, it dispatches `.scratch/<feature>/issues/` tickets to a shared AgentTeam with safe dependency-aware concurrency; every implementation ticket uses `/implement` and the main agent verifies evidence.
-- `wayfinder-team` is the map exploration orchestration layer. After confirmation, it dispatches `map.md` child issues to a shared AgentTeam; every exploration issue uses `/wayfinder`, and code/config work is blocked rather than implemented automatically.
-- Direct tasks are not team input: call `/implement` directly without creating an AgentTeam.
-- The other skills in this repository are standalone domain skills and do not require `mattpocock/skills`.
-
-## Skills
-
-| Skill | Description |
-|------|-------------|
-| [react-effects](./plugins/web/skills/react-effects/SKILL.md) | Detect and correct React `useEffect` anti-patterns with practical alternatives for common scenarios. |
-| [eli12](./plugins/learning/skills/eli12/SKILL.md) | Explain topics for curious 12-year-olds with clear visuals, short sections, and an HTML artifact. |
-| [implement-team](./plugins/engineering/skills/implement-team/SKILL.md) | Coordinate confirmed PRD/spec implementation tickets in a shared AgentTeam; tickets use `/implement` and the main agent verifies evidence. |
-| [wayfinder-team](./plugins/engineering/skills/wayfinder-team/SKILL.md) | Coordinate confirmed `map.md` child-issue exploration in a shared AgentTeam; issues use `/wayfinder` and code/config work is blocked. |
-
-## Installation
-
-Use the Skills CLI. See the [official CLI documentation](https://skills.sh/docs/cli) for the complete command reference.
-
-```bash
-# Install all plugin groups for CodeBuddy Code from this repository
-npx skills add . -a codebuddy --yes
-
-# Install an individual skill
-npx skills add . --skill react-effects
-npx skills add . --skill eli12
-npx skills add . --skill implement-team
-npx skills add . --skill wayfinder-team
-```
-
-### Claude Code plugins
-
-Validate each plugin locally with:
-
-```bash
-claude plugin validate ./plugins/web
-claude plugin validate ./plugins/engineering
-claude plugin validate ./plugins/learning
-```
-
-To install one or more groups from the Git marketplace and receive updates when the repository changes:
-
-```text
-/plugin marketplace add whinc/super-skills
-/plugin install web@super-skills
-/plugin install engineering@super-skills
-/plugin install learning@super-skills
-```
-
-Add this marketplace from a Git source or local directory. Do not add the `marketplace.json` file through a direct URL, because Claude Code cannot resolve the relative `source: "./plugins/<group>"` paths from a manifest-only download.
-
-## Contributing
-
-Pull requests are welcome. Keep each skill focused, document its invocation boundary, and update the relevant references when its behavior changes.
-
-## License
-
-MIT
-
----
-
-# 中文版
-
-这是一个可复用的 AI 编程 skill 集合，为特定工程任务提供聚焦的领域知识。所有 skill 遵循 [Skills](https://github.com/vercel-labs/skills) 规范，可通过 Skills CLI 安装。
-
-## 与 mattpocock/skills 的关系
-
-本仓库是独立维护的 skill 集合，不替代 `mattpocock/skills`。
-
-- `mattpocock/skills` 提供单 ticket 的 `/implement` 工作流，负责实现、测试、审查和提交。
-- 本仓库的 `implement-team` 是 PRD/spec 实现编排层：确认后把 `.scratch/<feature>/issues/` tickets 按依赖安全地最大化并发派发到共享 AgentTeam，所有实现 ticket 调用 `/implement`，由主 Agent 独立核验证据。
-- 本仓库的 `wayfinder-team` 是 map 探索编排层：确认后把 `map.md` 的 child issue 派发到共享 AgentTeam，所有探索 issue 调用 `/wayfinder`；代码或配置变更标记 blocked，不自动实现。
-- 直接任务不是团队输入：直接调用 `/implement`，不创建 AgentTeam。
-- 本仓库的其他 skill 是独立的领域 skill，不依赖 `mattpocock/skills`。
-
-## Skills
+### Web 开发
 
 | Skill | 描述 |
-|------|------|
-| [react-effects](./plugins/web/skills/react-effects/SKILL.md) | 检测并修正 React `useEffect` 反模式，为常见场景提供实用替代方案。 |
-| [eli12](./plugins/learning/skills/eli12/SKILL.md) | 面向好奇的 12 岁读者解释主题，使用清晰的视觉内容、简短段落和 HTML artifact。 |
-| [implement-team](./plugins/engineering/skills/implement-team/SKILL.md) | 将确认后的 PRD/spec 实现 ticket 按依赖图安全地最大化并发派发到共享 AgentTeam；ticket 调用 `/implement`，主 Agent 核验证据。 |
-| [wayfinder-team](./plugins/engineering/skills/wayfinder-team/SKILL.md) | 将确认后的 `map.md` child issue 派发到共享 AgentTeam 探索；issue 调用 `/wayfinder`，代码或配置变更标记 blocked。 |
+|-------|------|
+| [react-effects](./plugins/web/skills/react-effects/SKILL.md) | 检测并修正 React `useEffect` 反模式。覆盖 12 种常见场景，为每种场景给出更简单、更高性能的正确替代方案。 |
+
+### 工程工作流
+
+| Skill | 描述 |
+|-------|------|
+| [implement-team](./plugins/engineering/skills/implement-team/SKILL.md) | PRD/spec 实现编排层：经用户确认后，把 `.scratch/<feature>/issues/` 实现 tickets 按依赖 DAG 安全地最大化并发派发到共享 AgentTeam。每个 ticket 调用 `/implement`，主 Agent 独立核验证据。 |
+| [wayfinder-team](./plugins/engineering/skills/wayfinder-team/SKILL.md) | 地图探索编排层：经用户确认后，把 `map.md` 的 child issues 派发到共享 AgentTeam 并发探索。每个 issue 调用 `/wayfinder`；需要代码或配置变更的 issue 标记 `blocked`，不自动实现。 |
+
+### 学习与讲解
+
+| Skill | 描述 |
+|-------|------|
+| [eli12](./plugins/learning/skills/eli12/SKILL.md) | 面向好奇的 12 岁读者解释任意主题，使用清晰的可视化、简短段落和 HTML artifact。 |
 
 ## 安装
 
-使用 Skills CLI 安装。完整命令参考请阅读[官方 CLI 文档](https://skills.sh/docs/cli)。
+使用 Skills CLI 安装，完整命令参考见[官方文档](https://skills.sh/docs/cli)。
 
 ```bash
-# 从当前仓库为 CodeBuddy Code 安装全部 plugin 分组
+# 从本仓库为 CodeBuddy Code 安装全部插件分组
 npx skills add . -a codebuddy --yes
 
-# 安装单个 skill
+# 或只安装单个 skill
 npx skills add . --skill react-effects
 npx skills add . --skill eli12
 npx skills add . --skill implement-team
 npx skills add . --skill wayfinder-team
 ```
 
-### Claude Code plugins
+> [!NOTE]
+> `plugins/*/skills/` 目录有任何变化后，需要重新运行安装命令，才能在本地实际生效。
 
-使用以下命令分别校验本地 plugin manifest：
+### Claude Code 插件
+
+本地校验各插件的 manifest：
 
 ```bash
 claude plugin validate ./plugins/web
@@ -115,7 +51,7 @@ claude plugin validate ./plugins/engineering
 claude plugin validate ./plugins/learning
 ```
 
-通过 Git marketplace 选择一个或多个分组安装，并在仓库发生变化时获取更新：
+通过 Git 市场安装一个或多个分组，并在仓库更新时同步更新：
 
 ```text
 /plugin marketplace add whinc/super-skills
@@ -124,12 +60,30 @@ claude plugin validate ./plugins/learning
 /plugin install learning@super-skills
 ```
 
-请通过 Git 源或本地目录添加 marketplace。不要直接使用 `marketplace.json` 的 URL，因为仅下载 manifest 时，Claude Code 无法解析相对路径 `source: "./plugins/<group>"`。
+> [!IMPORTANT]
+> 请通过 Git 源或本地目录添加市场，不要直接使用 `marketplace.json` 的 URL——仅下载 manifest 时，Claude Code 无法解析相对路径 `source: "./plugins/<group>"`。
 
-## 贡献
+## 与 mattpocock/skills 的关系
 
-欢迎提交 PR。请保持每个 skill 的职责聚焦，明确记录调用边界，并在行为变化时同步更新相关参考文档。
+本仓库是独立维护的 skill 集合，不替代 [`mattpocock/skills`](https://github.com/mattpocock/skills)：
 
-## 许可证
+- `mattpocock/skills` 提供单 ticket 的 `/implement` 工作流，负责实现、测试、审查和提交。
+- 本仓库的 `implement-team` 是其上的多 ticket 编排层：拆分与派发由共享 AgentTeam 完成，单个 ticket 的执行仍由 `/implement` 承担。
+- 本仓库的 `wayfinder-team` 是 `/wayfinder` 的多 issue 探索编排层。
+- 直接实现单一任务时无需团队：直接调用 `/implement` 即可。
+- 其余 skill（如 `react-effects`、`eli12`）是独立领域 skill，不依赖 `mattpocock/skills`。
 
-MIT
+## 项目结构
+
+```text
+plugins/
+├── web/            # Web 开发技能分组
+│   └── skills/react-effects/
+├── engineering/    # 工程工作流技能分组
+│   ├── skills/implement-team/
+│   └── skills/wayfinder-team/
+└── learning/       # 学习讲解技能分组
+    └── skills/eli12/
+docs/
+└── agents/         # AgentTeam 协议、领域与 issue tracker 约定
+```
