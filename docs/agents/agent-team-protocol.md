@@ -1,6 +1,10 @@
 # AgentTeam 公共协议
 
-本协议是团队型 skill 的公共 manifest、调度、终态和 context 卫生来源。各 skill 只定义自己的输入边界与子 agent skill，不复制或改写本协议的终态约束。本协议目标是：避免主 Agent context 膨胀过快导致推理质量下降。
+本协议是团队型 skill 的公共 manifest、调度、终态和 context 卫生来源。各 skill 只定义自己的输入边界与子 agent skill。目标：避免主 Agent context 膨胀过快导致推理质量下降。
+
+## Frontier
+
+**frontier** 是当前所有依赖已被主 Agent 独立核验为 `resolved`、且自身尚未进入执行的任务集合。每轮调度从 frontier 取任务，在 `maxConcurrency` 上限内全量并发派发；核验通过并解锁后继时，frontier 向前推进。
 
 ## Manifest
 
@@ -17,7 +21,7 @@ coordinator:
   sharedContext: true
   dispatch: native-TeamCreate-AgentTeam
 team:
-  maxConcurrency: 4                  # 硬上限；上限内 ready ticket 全量派发
+  maxConcurrency: 4                  # 硬上限；frontier 全量派发
 paths:
   protectedPaths: []                 # 禁止任何 teammate 触碰；防误伤用户工作区
 evidenceDir: ".scratch/runs/agent-team/<runId>"   # 项目内，可复核证据
@@ -26,13 +30,13 @@ maxRepairRounds: 0
 tickets: []
 ```
 
-每个 ticket 必须保留唯一 `id`、原文 tracker 路径、`dependsOn`、`verify`、`evidence` 和当前 `status`。状态为 `pending`、`running`、`verifying`、`resolved`、`failed` 或 `blocked`。不存在 `allowedPaths`——任务范围不做静态声明，冲突防护见运行时 CONFLICT 升级（ADR-0001）。
+每个 ticket 必须保留唯一 `id`、原文 tracker 路径、`dependsOn`、`verify`、`evidence` 和当前 `status`。状态为 `pending`、`running`、`verifying`、`resolved`、`failed` 或 `blocked`。任务范围不做静态声明（`allowedPaths` 已移除），冲突防护见运行时 CONFLICT 升级（ADR-0001）。
 
-## 协调与 DAG
+## 协调与调度
 
-只创建一个原生 `TeamCreate` 得到的 `AgentTeam`。主 Agent 是唯一 coordinator、派发者、解锁者和核验者；成员共享 team 上下文，但不能解锁后继或代替主 Agent 改派任务。每轮挑选所有依赖已由主 Agent 核验为 `resolved` 的 ready ticket，在 `maxConcurrency` 上限内全量并发派发。DAG 必须检查唯一 ID、依赖存在、无环和 tracker 可写。
+只创建一个原生 `TeamCreate` 得到的 `AgentTeam`。主 Agent 是唯一 coordinator、派发者、解锁者和核验者；成员共享 team 上下文，解锁后继始终由主 Agent 执行。DAG 必须检查唯一 ID、依赖存在、无环和 tracker 可写。
 
-某 ticket `failed` 或 `blocked` 时，主 Agent 在共享上下文写入**一行事件摘要 + 指针**（事件详情、日志落盘到 `evidenceDir/<ticket>.failed.md`），并只沿依赖后代传播 `blocked`；独立分支继续，后代派发 prompt 中也只引用指针路径。不要把失败扩散到无依赖分支，不自动 reset、rollback、stash、删除证据或重试。恢复必须重新取得用户批准并重建基线。
+任务 `failed` 或 `blocked` 时，主 Agent 在共享上下文写入**一行事件摘要 + 指针**（事件详情、日志落盘到 `evidenceDir/<ticket>.failed.md`），`blocked` 只沿依赖后代传播，独立分支继续；后代派发 prompt 只引用指针路径。恢复动作（重试、reset、rollback、stash、删除证据）仅由用户批准触发，并需重建基线。
 
 ### CONFLICT 升级（仅 implement-team）
 
@@ -62,6 +66,8 @@ Teammate 在运行中发现文件冲突（编辑竞争、工作区出现非本 t
 {"event":"TICKET_RESOLVED","ticket":"01","status":"resolved","commit":"abc1234","changedFiles":["src/example.ts"],"verification":[{"command":"python3 -m unittest","result":"passed","evidence":".scratch/runs/agent-team/<runId>/01.log"}],"evidence":[".scratch/runs/agent-team/<runId>/01.log"],"summary":"验收通过","reason":null}
 ```
 
-事件只能是 `TICKET_RESOLVED`、`TICKET_FAILED` 或 `TICKET_BLOCKED`；状态只能是 `resolved`、`failed` 或 `blocked`。硬上限：`summary` ≤ 2 行；`changedFiles` 超过 20 条时完整清单落盘到 `evidenceDir/<ticket>.files.md`，事件只留清单文件路径；`verification` 只含命令、结果和 evidence 路径，不含命令输出。`resolved` 必须有非空 evidence，并把 tracker 的 `Status: resolved` 回写；失败和阻塞必须有 reason、已运行验证和 evidence。重复、缺字段、ID 不匹配、tracker 未更新、验证/evidence 不可复核或异常退出均 fail-closed。
+事件只能是 `TICKET_RESOLVED`、`TICKET_FAILED` 或 `TICKET_BLOCKED`；状态只能是 `resolved`、`failed` 或 `blocked`。硬上限：`summary` ≤ 2 行；`changedFiles` 超过 20 条时完整清单落盘到 `evidenceDir/<ticket>.files.md`，事件只留清单文件路径；`verification` 只含命令、结果和 evidence 路径，不含命令输出。`resolved` 必须有非空 evidence，并把 tracker 的 `Status: resolved` 回写；失败和阻塞必须有 reason、已运行验证和 evidence。wayfinding issue 额外必须有 `## Answer`、`Status: resolved` 和探索证据。
 
-主 Agent 独立复核：commit 存在且属于当前 ticket，Git 基线与 `protectedPaths` 未被污染，staging、coverage 和锁未被改动，验证命令/evidence 可复核，tracker 状态正确。`changedFiles` 是纯记录，不做范围校验（ADR-0001）。核验通过后才释放依赖。wayfinding issue 额外必须有 `## Answer`、`Status: resolved` 和探索证据。所有未核验或证据缺失的结果都保持阻塞，不得宣称完成。
+主 Agent 独立复核：commit 存在且属于当前 ticket，Git 基线与 `protectedPaths` 未被污染，staging、coverage 和锁未被改动，验证命令/evidence 可复核，tracker 状态正确。`changedFiles` 是纯记录，不做范围校验（ADR-0001）。核验通过后才释放依赖。
+
+**fail-closed**：以下任一情况出现时，该 ticket 保持 `blocked`，依赖不释放，主 Agent 也不宣称完成——终态事件重复、缺字段、ID 不匹配、tracker 未更新、验证或 evidence 不可复核、异常退出、独立核验未通过。

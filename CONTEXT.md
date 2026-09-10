@@ -14,6 +14,10 @@ _Avoid_: leader、boss、调度器
 由主 Agent 派发的子 agent，只处理自己被分配的执行单元，不能解锁后继。
 _Avoid_: sub-agent（泛指时可用）、worker
 
+**Frontier**：
+当前所有依赖已被主 Agent 核验为 `resolved`、且自身尚未进入执行的任务集合。每轮调度从 frontier 取任务，在 `maxConcurrency` 上限内全量并发派发；核验解锁后 frontier 向前推进。
+_Avoid_: ready ticket、ready issue、待办列表
+
 **Ticket**：
 AgentTeam 中的唯一执行单元，对应一个实现 ticket（implement-team）或探索 child issue（wayfinder-team）。
 _Avoid_: 任务、工单

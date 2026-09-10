@@ -38,12 +38,12 @@ def merge_sources(prd: str | None, spec: str | None) -> dict[str, object]:
     return {"sources": [source for source, value in (("prd.md", prd), ("spec.md", spec)) if value], "conflicts": conflicts, "needs_confirmation": True}
 
 
-def ready_round(tickets: list[Ticket], completed: set[str], max_concurrency: int = 4) -> list[Ticket]:
+def frontier_round(tickets: list[Ticket], resolved: set[str], max_concurrency: int = 4) -> list[Ticket]:
     selected = []
     for ticket in tickets:
         if len(selected) >= max_concurrency:
             break
-        if ticket.status != "pending" or ticket.ticket_id in completed or not set(ticket.depends_on) <= completed:
+        if ticket.status != "pending" or ticket.ticket_id in resolved or not set(ticket.depends_on) <= resolved:
             continue
         selected.append(ticket)
     return selected
@@ -68,7 +68,6 @@ class ImplementTeamIntegrationTests(unittest.TestCase):
     def setUp(self):
         self.root = Path(__file__).parents[1]
         self.skill = (self.root / "SKILL.md").read_text()
-        self.references = {path.name: path.read_text() for path in (self.root / "references").glob("*.md")}
 
     def test_prd_spec_are_merged_and_always_confirmed(self):
         result = merge_sources("范围\n验收: A", "约束\n验收: B")
@@ -79,6 +78,7 @@ class ImplementTeamIntegrationTests(unittest.TestCase):
         self.assertIn("矩阵", self.skill)
         self.assertIn("无冲突", self.skill)
         self.assertIn("等待用户确认", self.skill)
+        self.assertIn("input.kind: prd-spec-input", self.skill)
 
     def test_tickets_are_required_and_actual_issue_files_are_units(self):
         tickets = parse_tickets({".scratch/f/issues/01-a.md": "Blocked by: none", ".scratch/f/issues/02-b.md": "dependsOn: 01"})
@@ -87,17 +87,24 @@ class ImplementTeamIntegrationTests(unittest.TestCase):
         self.assertIn("实际 `.scratch/<feature>/issues/`", self.skill)
         self.assertIn("没有任何实现 tickets", self.skill)
         self.assertIn("只完成输入评估并停止", self.skill)
+        self.assertIn("唯一执行单元", self.skill)
 
     def test_confirmation_precedes_team_creation(self):
-        self.assertLess(self.skill.index("确认前不创建 team"), self.skill.index("只有确认后才创建一个 `AgentTeam`"))
+        self.assertLess(self.skill.index("确认前不创建 team"), self.skill.index("确认后才创建一个原生 `AgentTeam`"))
 
-    def test_dag_maximizes_concurrency_within_cap_without_path_checks(self):
+    def test_direct_task_boundary_stays_outside_team(self):
+        self.assertIn("direct-task", self.skill)
+        self.assertIn("直接调用 `/implement`", self.skill)
+        self.assertIn("不创建 `TeamCreate` 或 `AgentTeam`", self.skill)
+
+    def test_frontier_maximizes_concurrency_within_cap(self):
         tickets = [Ticket("01"), Ticket("02"), Ticket("03"), Ticket("04"), Ticket("05"), Ticket("06")]
-        self.assertEqual([ticket.ticket_id for ticket in ready_round(tickets, set())], ["01", "02", "03", "04"])
-        self.assertEqual([ticket.ticket_id for ticket in ready_round(tickets, set(), max_concurrency=2)], ["01", "02"])
+        self.assertEqual([ticket.ticket_id for ticket in frontier_round(tickets, set())], ["01", "02", "03", "04"])
+        self.assertEqual([ticket.ticket_id for ticket in frontier_round(tickets, set(), max_concurrency=2)], ["01", "02"])
         gated = [Ticket("01"), Ticket("02"), Ticket("03", ["01"]), Ticket("04", ["01"])]
-        self.assertEqual([ticket.ticket_id for ticket in ready_round(gated, set())], ["01", "02"])
-        self.assertEqual([ticket.ticket_id for ticket in ready_round(gated, {"01"})], ["02", "03", "04"])
+        self.assertEqual([ticket.ticket_id for ticket in frontier_round(gated, set())], ["01", "02"])
+        self.assertEqual([ticket.ticket_id for ticket in frontier_round(gated, {"01"})], ["02", "03", "04"])
+        self.assertIn("frontier", self.skill)
         self.assertIn("CONFLICT", self.skill)
         self.assertIn("maxConcurrency", self.skill)
         self.assertNotIn("allowedPaths", self.skill)
@@ -110,11 +117,12 @@ class ImplementTeamIntegrationTests(unittest.TestCase):
         self.assertIn("独立分支继续", self.skill)
 
     def test_agent_skill_and_tracker_protocol_are_isolated(self):
-        self.assertIn("/implement", self.references["prd-spec.md"])
-        self.assertNotIn("/wayfinder", self.references["prd-spec.md"])
+        self.assertIn("/implement", self.skill)
+        self.assertNotIn("/wayfinder", self.skill)
         self.assertIn("Status: resolved", self.skill)
         self.assertIn("evidence", self.skill)
-        self.assertIn("docs/agents/agent-team-protocol.md", self.references["manifest-template.md"])
+        self.assertIn("fail-closed", self.skill)
+        self.assertIn("docs/agents/agent-team-protocol.md", self.skill)
 
 
 if __name__ == "__main__":
