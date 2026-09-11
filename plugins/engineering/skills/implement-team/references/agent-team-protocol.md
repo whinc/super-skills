@@ -30,7 +30,7 @@ maxRepairRounds: 0
 tickets: []
 ```
 
-每个 ticket 必须保留唯一 `id`、原文 tracker 路径、`dependsOn`、`verify`、`evidence` 和当前 `status`。状态为 `pending`、`running`、`verifying`、`resolved`、`failed` 或 `blocked`。任务范围不做静态声明（`allowedPaths` 已移除），冲突防护见运行时 CONFLICT 升级（ADR-0001）。
+每个 ticket 必须保留唯一 `id`、原文 tracker 路径、`dependsOn`、`verify`、`evidence` 和当前 `status`。状态为 `pending`、`running`、`verifying`、`resolved`、`failed` 或 `blocked`。任务范围不做静态声明（`allowedPaths` 已移除），冲突防护见运行时 CONFLICT 升级。
 
 ## 协调与调度
 
@@ -68,6 +68,6 @@ Teammate 在运行中发现文件冲突（编辑竞争、工作区出现非本 t
 
 事件只能是 `TICKET_RESOLVED`、`TICKET_FAILED` 或 `TICKET_BLOCKED`；状态只能是 `resolved`、`failed` 或 `blocked`。硬上限：`summary` ≤ 2 行；`changedFiles` 超过 20 条时完整清单落盘到 `evidenceDir/<ticket>.files.md`，事件只留清单文件路径；`verification` 只含命令、结果和 evidence 路径，不含命令输出。`resolved` 必须有非空 evidence，并把 tracker 的 `Status: resolved` 回写；失败和阻塞必须有 reason、已运行验证和 evidence。wayfinding issue 额外必须有 `## Answer`、`Status: resolved` 和探索证据。
 
-主 Agent 独立复核：commit 存在且属于当前 ticket，Git 基线与 `protectedPaths` 未被污染，staging、coverage 和锁未被改动，验证命令/evidence 可复核，tracker 状态正确。`changedFiles` 是纯记录，不做范围校验（ADR-0001）。核验通过后才释放依赖。
+主 Agent 独立复核：commit 存在且属于当前 ticket，Git 基线与 `protectedPaths` 未被污染，staging、coverage 和锁未被改动，验证命令/evidence 可复核，tracker 状态正确。`changedFiles` 是纯记录，不做范围校验。核验通过后才释放依赖。
 
 **fail-closed**：以下任一情况出现时，该 ticket 保持 `blocked`，依赖不释放，主 Agent 也不宣称完成——终态事件重复、缺字段、ID 不匹配、tracker 未更新、验证或 evidence 不可复核、异常退出、独立核验未通过。

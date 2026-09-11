@@ -122,7 +122,14 @@ class ImplementTeamIntegrationTests(unittest.TestCase):
         self.assertIn("Status: resolved", self.skill)
         self.assertIn("evidence", self.skill)
         self.assertIn("fail-closed", self.skill)
-        self.assertIn("docs/agents/agent-team-protocol.md", self.skill)
+        self.assertIn("references/agent-team-protocol.md", self.skill)
+
+    def test_protocol_ships_and_matches_sibling_copy(self):
+        protocol = self.root / "references" / "agent-team-protocol.md"
+        self.assertTrue(protocol.exists())
+        sibling = self.root.parent / "wayfinder-team" / "references" / "agent-team-protocol.md"
+        if sibling.exists():
+            self.assertEqual(protocol.read_text(), sibling.read_text())
 
 
 if __name__ == "__main__":

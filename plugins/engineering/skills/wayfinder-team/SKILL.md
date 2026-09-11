@@ -8,7 +8,9 @@ disable-model-invocation: true
 
 针对一个 `map.md` 与其同目录 `issues/` 的 child issues 做并发探索编排，manifest 的 `input.kind: map-issues`。`map.md` 只读，对地图的补充以新增 issue 文件形式进行；map 本身不是执行单元，每个 child issue 是。需要实现代码或配置变更的 issue 走 `blocked` 流程（见 step 4）。本 skill 与 PRD/spec 实现 tickets、direct-task 无交集。
 
-公共机制——manifest、frontier 调度、context 卫生、终态事件、独立核验、fail-closed——唯一来源是 `docs/agents/agent-team-protocol.md`，本 skill 只定义输入边界与步骤。团队用原生 `TeamCreate` 创建一个 `AgentTeam`：主 Agent 是唯一 coordinator、派发者、解锁者和独立核验者；成员共享 team 上下文，解锁后继始终由主 Agent 执行。
+前置：目标项目用 `.scratch/<effort>/` 存放 `map.md` 与同目录 `issues/`；`/wayfinder` 由 `mattpocock/skills` 提供，需预先安装。
+
+公共机制——manifest、frontier 调度、context 卫生、终态事件、独立核验、fail-closed——唯一来源是 `references/agent-team-protocol.md`，本 skill 只定义输入边界与步骤。团队用原生 `TeamCreate` 创建一个 `AgentTeam`：主 Agent 是唯一 coordinator、派发者、解锁者和独立核验者；成员共享 team 上下文，解锁后继始终由主 Agent 执行。
 
 ## Steps
 
@@ -24,5 +26,4 @@ disable-model-invocation: true
 
 ## References
 
-- 公共协议（manifest 字段、frontier、context 卫生、终态、核验、fail-closed）：`docs/agents/agent-team-protocol.md`
-- 移除静态任务范围声明、改运行时冲突升级的决策：`docs/adr/0001-remove-allowedpaths-runtime-conflict-escalation.md`
+- 公共协议（manifest 字段、frontier、context 卫生、终态、核验、fail-closed）：`references/agent-team-protocol.md`

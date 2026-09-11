@@ -8,7 +8,9 @@ disable-model-invocation: true
 
 针对 `prd.md`、`spec.md` 与实际 `.scratch/<feature>/issues/` 的实现 tickets（三类输入可任意组合）做并发实施编排，manifest 的 `input.kind: prd-spec-input`。每个 ticket 是唯一执行单元；PRD、spec 和多个 ticket 各自独立，不合并成单一执行单元。用户只有单个实现目标时走 direct-task 边界：直接调用 `/implement`，不创建 `TeamCreate` 或 `AgentTeam`。文件冲突的处理方式是 CONFLICT 升级（仅本 skill 有）。
 
-公共机制——manifest、frontier 调度、context 卫生、CONFLICT 升级、终态事件、独立核验、fail-closed——唯一来源是 `docs/agents/agent-team-protocol.md`，本 skill 只定义输入边界与步骤。团队用原生 `TeamCreate` 创建一个 `AgentTeam`：主 Agent 是唯一 coordinator、派发者、解锁者和独立核验者；成员共享 team 上下文，解锁后继始终由主 Agent 执行。
+前置：目标项目用 `.scratch/<feature>/issues/` 存放 tickets；`/implement` 由 `mattpocock/skills` 提供，需预先安装。
+
+公共机制——manifest、frontier 调度、context 卫生、CONFLICT 升级、终态事件、独立核验、fail-closed——唯一来源是 `references/agent-team-protocol.md`，本 skill 只定义输入边界与步骤。团队用原生 `TeamCreate` 创建一个 `AgentTeam`：主 Agent 是唯一 coordinator、派发者、解锁者和独立核验者；成员共享 team 上下文，解锁后继始终由主 Agent 执行。
 
 ## Steps
 
@@ -26,5 +28,4 @@ disable-model-invocation: true
 
 ## References
 
-- 公共协议（manifest 字段、frontier、context 卫生、CONFLICT、终态、核验、fail-closed）：`docs/agents/agent-team-protocol.md`
-- 移除静态任务范围声明、改运行时冲突升级的决策：`docs/adr/0001-remove-allowedpaths-runtime-conflict-escalation.md`
+- 公共协议（manifest 字段、frontier、context 卫生、CONFLICT、终态、核验、fail-closed）：`references/agent-team-protocol.md`

@@ -35,7 +35,7 @@ REQUIRED = (
     "确认前不创建 team",
     "不确定",
     "全量并发",
-    "docs/agents/agent-team-protocol.md",
+    "references/agent-team-protocol.md",
 )
 LEGACY = ("implement-" + "fast", "implement-" + "tmux", "wayfinder-" + "map", "spec-" + "tickets")
 

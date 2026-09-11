@@ -20,7 +20,7 @@ input.kind: map-issues map.md 同目录 `issues/` TeamCreate AgentTeam
 ## Answer Status: resolved evidence blocked DAG maxConcurrency
 maxRepairRounds protectedPaths 只沿依赖后代传播 独立核验 fail-closed
 等待用户确认 确认前不创建 team 不确定 全量并发
-docs/agents/agent-team-protocol.md
+references/agent-team-protocol.md
 """
 
 

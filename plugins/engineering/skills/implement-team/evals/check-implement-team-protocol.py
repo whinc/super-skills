@@ -41,7 +41,7 @@ REQUIRED = (
     "fail-closed",
     "Status: resolved",
     "evidence",
-    "docs/agents/agent-team-protocol.md",
+    "references/agent-team-protocol.md",
 )
 LEGACY = ("implement-" + "fast", "implement-" + "tmux", "wayfinder-" + "map", "spec-" + "tickets")
 

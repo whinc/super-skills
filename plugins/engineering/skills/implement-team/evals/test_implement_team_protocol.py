@@ -21,7 +21,7 @@ TeamCreate AgentTeam 唯一 coordinator 派发者 解锁者 独立核验者 fron
 只完成输入评估并停止 确认前不创建 team /implement dependsOn CONFLICT
 maxConcurrency maxRepairRounds protectedPaths DAG 只沿依赖后代传播
 独立核验 fail-closed Status: resolved evidence
-docs/agents/agent-team-protocol.md
+references/agent-team-protocol.md
 """
 
 
