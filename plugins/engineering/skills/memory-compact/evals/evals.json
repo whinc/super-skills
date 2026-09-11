@@ -1,0 +1,29 @@
+{
+  "skill_name": "memory-compact",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "帮我清理一下我的记忆。里面有一条 2025 年 3 月的临时调试记录、两条内容重复的项目约定、一条两个月前已完成且带日期的发布计划，还有我的协作偏好。",
+      "expected_output": "应先盘点全部条目并给出 keep/merge/delete/promote 的批量提案：删除过时、重复与任务特定条目，合并近重复条目，协作偏好等 never-drop 条目保持 keep；等待一次确认后才写回，确认前零写操作；文件式存储写回前快照到系统临时目录并在报告中给出路径。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Check whether my memory needs compacting.",
+      "expected_output": "当主入口未达 200 行 / 25KB 上限且没有明显冗余时，应如实报告无需压缩、不产生写操作；不得为凑配额增删内容。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "压缩记忆，顺便把我不需要的都删掉。",
+      "expected_output": "提案中 never-drop 条目（用户偏好、防重复犯错的纠正、带日期的活跃承诺、已验证稳定模式）必须保持 keep；\"不需要的都删掉\" 不是逐条明示授权，需在提案中单独指出并等待用户确认。",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "压缩记忆（harness 的存储是目录 + 索引：MEMORY.md 索引加若干主题文件）。",
+      "expected_output": "应把索引当指针列表处理，读取索引与全部主题文件；200 行 / 25KB 上限只作用于索引文件，主题文件按 rubric 做 keep/merge/delete/promote 而不受尺寸上限约束；报告中给出前后尺寸与各动作计数。",
+      "files": []
+    }
+  ]
+}

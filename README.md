@@ -1,6 +1,6 @@
 # super-skills
 
-个人工程思考沉淀成的 skill 集合，供编码 agent 使用：React 反模式修正、多 ticket 并发实现编排、面向 12 岁读者的讲解。所有 skill 遵循 [Skills 规范](https://skills.sh/docs/cli)，按插件分组组织。
+个人工程思考沉淀成的 skill 集合，供编码 agent 使用：React 反模式修正、多 ticket 并发实现编排、agent memory 定期压缩、面向 12 岁读者的讲解。所有 skill 遵循 [Skills 规范](https://skills.sh/docs/cli)，按插件分组组织。
 
 ## Skill 一览
 
@@ -12,6 +12,7 @@
 
 - **[implement-team](./plugins/engineering/skills/implement-team/SKILL.md)**: PRD/spec 实现编排层：经用户确认后，把 `.scratch/<feature>/issues/` 实现 tickets 按依赖 DAG 事件驱动并发派发。每个 ticket 在独立 git worktree 中调用 `/implement`，主 Agent 独立核验后合并进集成分支、收尾落回原分支。
 - **[wayfinder-team](./plugins/engineering/skills/wayfinder-team/SKILL.md)**: 地图探索编排层：经用户确认后，把 `map.md` 的 child issues 派发到共享 AgentTeam 并发探索。每个 issue 调用 `/wayfinder`；需要代码或配置变更的 issue 标记 `blocked`，不自动实现。
+- **[memory-compact](./plugins/engineering/skills/memory-compact/SKILL.md)**: agent memory 定期压缩：按 keep/merge/delete/promote 清理过时、重复、任务特定与可恢复条目，批量提案经一次确认后写回，主入口保持 200 行 / 25KB 双上限。
 
 ### 学习与讲解
 
