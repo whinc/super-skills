@@ -15,7 +15,7 @@ name: wayfinder-team
 description: map exploration
 disable-model-invocation: true
 ---
-input.kind: map-issues map.md 同目录 `issues/` TeamCreate AgentTeam
+input.kind: map-issues map.md 同目录 `issues/` .scratch/<effort>/ TeamCreate AgentTeam
 唯一 coordinator 派发者 解锁者 独立核验者 frontier /wayfinder
 ## Answer Status: resolved evidence blocked DAG maxConcurrency
 maxRepairRounds protectedPaths 只沿依赖后代传播 独立核验 fail-closed
@@ -57,6 +57,10 @@ class WayfinderTeamProtocolTests(unittest.TestCase):
         result = self.run_checker(VALID.replace("## Answer", "回答"))
         self.assertNotEqual(result.returncode, 0)
         result = self.run_checker(VALID.replace("Status: resolved", "Status: claimed"))
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_requires_input_location_convention(self):
+        result = self.run_checker(VALID.replace(".scratch/<effort>/", "任意目录"))
         self.assertNotEqual(result.returncode, 0)
 
     def test_rejects_implementation_skill_and_allowedpaths(self):

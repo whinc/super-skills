@@ -119,6 +119,11 @@ class WayfinderTeamIntegrationTests(unittest.TestCase):
         if sibling.exists():
             self.assertEqual(protocol.read_text(), sibling.read_text())
 
+    def test_references_stay_inside_the_skill_folder(self):
+        outside = re.compile(r"(^|[^\w/.])docs/|\.\./|/Users/|/home/")
+        for path in sorted(self.root.rglob("*.md")):
+            self.assertIsNone(outside.search(path.read_text()), f"{path} 引用了 skill 目录外的路径")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -12,6 +12,7 @@ REQUIRED = (
     "input.kind: map-issues",
     "map.md",
     "同目录 `issues/`",
+    ".scratch/<effort>/",
     "TeamCreate",
     "AgentTeam",
     "唯一 coordinator",

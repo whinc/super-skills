@@ -4,3 +4,6 @@ skills-lock.json
 
 # Python 编译产物
 __pycache__/
+
+# macOS
+.DS_Store
