@@ -17,11 +17,13 @@ disable-model-invocation: true
 ---
 input.kind: prd-spec-input PRD spec.md .scratch/<feature>/issues/ direct-task
 TeamCreate AgentTeam 唯一 coordinator 派发者 解锁者 独立核验者 frontier
-唯一执行单元 冲突矩阵无冲突 等待用户确认 没有任何实现 tickets
-只完成输入评估并停止 确认前不创建 team /implement dependsOn CONFLICT
-maxConcurrency protectedPaths DAG 只沿依赖后代传播
+等待与唤醒 唯一执行单元 冲突矩阵无冲突 等待用户确认 没有任何实现 tickets
+只完成输入评估并停止 确认前不创建 team /implement dependsOn
+DAG 只沿依赖后代传播 全部并发派发
 独立核验 fail-closed Status: resolved evidence
-references/agent-team-protocol.md
+references/agent-team-protocol.md references/worktree-merge.md
+worktree 集成分支 Merger integrationVerify 立即补派
+TICKET_RESOLVED TICKET_BLOCKED context 卫生 终态事件 evidenceDir tempDir
 """
 
 
@@ -49,14 +51,22 @@ class ImplementTeamProtocolTests(unittest.TestCase):
         result = self.run_checker(VALID.replace("没有任何实现 tickets", "有 tickets"))
         self.assertNotEqual(result.returncode, 0)
 
-    def test_requires_frontier_and_concurrency_cap(self):
+    def test_requires_frontier_and_dispatch_contract(self):
         result = self.run_checker(VALID.replace("frontier", "ready ticket"))
         self.assertNotEqual(result.returncode, 0)
-        result = self.run_checker(VALID.replace("maxConcurrency", "并发无上限"))
+        result = self.run_checker(VALID.replace("全部并发派发", "按批派发"))
+        self.assertNotEqual(result.returncode, 0)
+        result = self.run_checker(VALID.replace("立即补派", "等待同批终态"))
         self.assertNotEqual(result.returncode, 0)
 
+    def test_requires_worktree_isolation_contract(self):
+        for old, new in (("worktree", "共享工作区"), ("集成分支", "当前分支"), ("Merger", "手工合并"), ("integrationVerify", "无需验证")):
+            with self.subTest(old=old):
+                result = self.run_checker(VALID.replace(old, new))
+                self.assertNotEqual(result.returncode, 0)
+
     def test_requires_implement_and_safety_fields(self):
-        for old, new in (("/implement", "手工实现"), ("dependsOn", "dependency"), ("CONFLICT", "自由并行"), ("fail-closed", "开放通过")):
+        for old, new in (("/implement", "手工实现"), ("dependsOn", "dependency"), ("fail-closed", "开放通过")):
             with self.subTest(old=old):
                 result = self.run_checker(VALID.replace(old, new))
                 self.assertNotEqual(result.returncode, 0)
@@ -69,11 +79,13 @@ class ImplementTeamProtocolTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("缺少机制字段", result.stdout)
 
-    def test_rejects_removed_repair_field(self):
-        result = self.run_checker(VALID + " maxRepairRounds: 0")
-        self.assertNotEqual(result.returncode, 0)
+    def test_rejects_removed_mechanisms(self):
+        for removed in ("maxRepairRounds: 0", "CONFLICT", "verifying", "maxConcurrency: 4", "protectedPaths: []"):
+            with self.subTest(removed=removed):
+                result = self.run_checker(VALID + " " + removed)
+                self.assertNotEqual(result.returncode, 0)
         with tempfile.NamedTemporaryFile("w", suffix=".md") as protocol:
-            protocol.write("maxRepairRounds: 0")
+            protocol.write("maxRepairRounds: 0 CONFLICT verifying maxConcurrency: 4 protectedPaths: []")
             protocol.flush()
             result = self.run_checker(VALID, protocol.name)
             self.assertNotEqual(result.returncode, 0)

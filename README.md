@@ -10,7 +10,7 @@
 
 ### 工程工作流
 
-- **[implement-team](./plugins/engineering/skills/implement-team/SKILL.md)**: PRD/spec 实现编排层：经用户确认后，把 `.scratch/<feature>/issues/` 实现 tickets 按依赖 DAG 安全地最大化并发派发到共享 AgentTeam。每个 ticket 调用 `/implement`，主 Agent 独立核验证据。
+- **[implement-team](./plugins/engineering/skills/implement-team/SKILL.md)**: PRD/spec 实现编排层：经用户确认后，把 `.scratch/<feature>/issues/` 实现 tickets 按依赖 DAG 事件驱动并发派发。每个 ticket 在独立 git worktree 中调用 `/implement`，主 Agent 独立核验后合并进集成分支、收尾落回原分支。
 - **[wayfinder-team](./plugins/engineering/skills/wayfinder-team/SKILL.md)**: 地图探索编排层：经用户确认后，把 `map.md` 的 child issues 派发到共享 AgentTeam 并发探索。每个 issue 调用 `/wayfinder`；需要代码或配置变更的 issue 标记 `blocked`，不自动实现。
 
 ### 学习与讲解

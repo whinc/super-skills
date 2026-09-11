@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""检查 implement-team 的输入边界、确认门禁与 protocol 机制契约。"""
+"""检查 implement-team 的输入边界、确认门禁、worktree 隔离与 protocol 机制契约。"""
 
 from pathlib import Path
 import sys
@@ -26,10 +26,8 @@ SKILL_TOKENS = (
     "确认前不创建 team",
     "/implement",
     "dependsOn",
-    "CONFLICT",
     "frontier",
-    "maxConcurrency",
-    "protectedPaths",
+    "全部并发派发",
     "DAG",
     "只沿依赖后代传播",
     "独立核验",
@@ -37,6 +35,12 @@ SKILL_TOKENS = (
     "Status: resolved",
     "evidence",
     "references/agent-team-protocol.md",
+    "references/worktree-merge.md",
+    "worktree",
+    "集成分支",
+    "Merger",
+    "integrationVerify",
+    "立即补派",
 )
 PROTOCOL_TOKENS = (
     "唯一 coordinator",
@@ -44,6 +48,8 @@ PROTOCOL_TOKENS = (
     "解锁者",
     "独立核验者",
     "frontier",
+    "全部并发派发",
+    "等待与唤醒",
     "context 卫生",
     "终态事件",
     "TICKET_RESOLVED",
@@ -51,13 +57,12 @@ PROTOCOL_TOKENS = (
     "fail-closed",
     "evidenceDir",
     "tempDir",
-    "maxConcurrency",
-    "protectedPaths",
-    "CONFLICT",
+    "integrationVerify",
     "Status: resolved",
+    "立即补派",
 )
 LEGACY = ("implement-" + "fast", "implement-" + "tmux", "wayfinder-" + "map", "spec-" + "tickets")
-REMOVED = ("maxRepairRounds",)
+REMOVED = ("maxRepairRounds", "CONFLICT", "verifying", "maxConcurrency", "protectedPaths")
 
 
 def check_skill(text: str) -> list[str]:
@@ -95,7 +100,7 @@ def main() -> int:
         for error in errors:
             print(f"协议失败：{error}")
         return 1
-    print("协议通过：implement-team 输入边界、确认门禁、frontier 调度与 protocol 机制契约有效")
+    print("协议通过：implement-team 输入边界、确认门禁、worktree 隔离与 protocol 机制契约有效")
     return 0
 
 

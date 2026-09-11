@@ -15,8 +15,8 @@ _Avoid_: leader、boss、调度器
 _Avoid_: sub-agent（泛指时可用）、worker
 
 **Frontier**：
-当前所有依赖已被主 Agent 核验为 `resolved`、且自身尚未进入执行的任务集合。每轮调度从 frontier 取任务，在 `maxConcurrency` 上限内全量并发派发；核验解锁后 frontier 向前推进。
-_Avoid_: ready ticket、ready issue、待办列表
+当前所有依赖已被主 Agent 核验为 `resolved`、且自身尚未进入执行的任务集合。frontier 上的任务全部并发派发；任一任务核验解锁后继时立即补派，不等同批其他任务终态。
+_Avoid_: ready ticket、ready issue、待办列表、波次同步
 
 **Ticket**：
 AgentTeam 中的唯一执行单元，对应一个实现 ticket（implement-team）或探索 child issue（wayfinder-team）。
@@ -25,6 +25,35 @@ _Avoid_: 任务、工单
 **Map**：
 wayfinder 的探索地图文件（`map.md`），只读；对地图的补充以新增 issue 文件形式进行，不直接改写 Map。
 _Avoid_: 把 Map 当作执行单元
+
+**等待与唤醒**：
+派发后主 Agent 结束当前回合等待终态通知，不轮询；每收到一个终态事件即处理，任一 Ticket 仍在 `running` 时不得收尾或宣称完成。
+_Avoid_: 轮询、进度心跳
+
+### Worktree 隔离（仅 implement-team）
+
+**集成分支**：
+一次 run 的工作分支（`agent-team/<runId>`），从落回目标分支的 HEAD 创建；所有 Ticket 分支合并进它，收尾由它落回目标分支。
+_Avoid_: 主分支、feature 分支
+
+**集成 worktree**：
+集成分支的检出目录（`<tempDir>/integration`），主 Agent 合并、核验解锁与收尾集成验证的唯一场所；主工作区全程不被触碰。
+
+**Ticket worktree**：
+每个 Ticket 独立的工作检出与分支（`agent-team/<runId>/<ticket>`），Teammate 自行创建并只在此提交；隔离的是 Teammate 之间的编辑竞争，不是安全沙箱。
+_Avoid_: 共享工作区、全局检出
+
+**主工作区**：
+用户的当前检出。Teammate 只在 Ticket worktree 内工作，对主工作区唯一的写操作是用绝对路径落盘 Evidence。
+_Avoid_: protectedPaths（已移除：共享工作区时代的禁区清单，被 worktree 隔离取代）
+
+**Merger**：
+合并冲突时派出的解决者 Teammate，只解决冲突、不附加功能；报告 `MERGE_RESOLVED` 或 `MERGE_BLOCKED`，结果由主 Agent 复核并重跑该 Ticket 的 verify。
+_Avoid_: 把 Merger 当作实现者
+
+**落回**：
+收尾时把集成分支 `git merge --no-ff` 进目标分支的动作；失败（冲突或工作区脏）保持现场，并向用户给出手动落回命令。
+_Avoid_: 自动合并、发布
 
 ### Context 卫生
 
@@ -39,21 +68,12 @@ evidence 等可复核产物写入项目内 evidenceDir（`.scratch/runs/agent-te
 _Avoid_: 日志、输出（过程性内容不是 Evidence）
 
 **终态事件**：
-Teammate 报告结果的唯一一次结构化消息，只能是 `TICKET_RESOLVED`、`TICKET_FAILED` 或 `TICKET_BLOCKED`；字段有硬上限，不含执行过程。
+Teammate 报告结果的唯一一次结构化消息，只能是 `TICKET_RESOLVED`、`TICKET_FAILED` 或 `TICKET_BLOCKED`（Merger 用 `MERGE_RESOLVED`/`MERGE_BLOCKED`）；字段有硬上限，不含执行过程。
 _Avoid_: 进度汇报、完成报告、心跳
-
-**CONFLICT 升级**：
-Teammate 在运行中发现文件冲突时发送的唯一合法中途消息，请求主 Agent 协调（等待、串行重派或指引避让）；仅 implement-team 使用，冲突期间 Ticket 保持 `running`。
 
 **指针化共享上下文**：
 共享上下文中只允许写入一行事件摘要加文件指针；详情落盘到 evidenceDir，需要时由读取方自行打开。
 
 **Run Report**：
-收尾时主 Agent 生成到 evidenceDir 的全量明细文件；对话中只输出简表（Ticket / 状态 / commit / 一行结论）加 Report 路径。
+收尾时主 Agent 生成到 evidenceDir 的全量明细文件；含每个 Ticket 的状态与证据、集成验证结果、合并记录、落回 SHA 与保留的 worktree 路径。对话中只输出简表（Ticket / 状态 / commit / 一行结论）加 Report 路径。
 _Avoid_: 在对话中全量汇总
-
-### 保护边界
-
-**protectedPaths**：
-禁止任何 Teammate 触碰的路径（用户既有改动、coverage、锁），独立于任务范围存在，防的是误伤用户工作区而非 Teammate 之间打架。
-_Avoid_: allowedPaths（已移除的概念：静态任务范围声明，被 CONFLICT 升级取代）

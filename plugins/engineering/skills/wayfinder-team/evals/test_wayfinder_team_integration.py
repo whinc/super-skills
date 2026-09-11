@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""wayfinder-team 的 map 输入、终态、DAG 和失败传播集成测试。"""
+"""wayfinder-team 的 map 输入、终态、事件驱动调度、失败传播与探索纪律集成测试。"""
 
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -10,7 +10,7 @@ import unittest
 @dataclass
 class Issue:
     issue_id: str
-    status: str = "claimed"
+    status: str = "pending"
     depends_on: list[str] = field(default_factory=list)
 
 
@@ -26,7 +26,7 @@ def parse_issues(files: dict[str, str]) -> list[Issue]:
     for path, text in sorted(files.items()):
         match = re.search(r"(?:^|/)\s*(\d{2})-", path)
         status = re.search(r"^Status:\s*(\w+)", text, re.MULTILINE)
-        issues.append(Issue(match.group(1), status.group(1) if status else "claimed", parse_blocked(text)))
+        issues.append(Issue(match.group(1), status.group(1) if status else "pending", parse_blocked(text)))
     return issues
 
 
@@ -34,15 +34,13 @@ def can_resolve(issue_text: str, evidence: list[str]) -> bool:
     return "## Answer" in issue_text and re.search(r"^Status:\s*resolved$", issue_text, re.MULTILINE) is not None and bool(evidence)
 
 
-def frontier_round(issues: list[Issue], resolved: set[str], max_concurrency: int = 4) -> list[Issue]:
-    selected = []
-    for issue in issues:
-        if len(selected) >= max_concurrency:
-            break
-        if issue.status == "resolved" or issue.issue_id in resolved or not set(issue.depends_on) <= resolved:
-            continue
-        selected.append(issue)
-    return selected
+def pick_dispatch(issues: list[Issue], resolved: set[str]) -> list[Issue]:
+    """frontier 上的任务全部并发派发；只受依赖与在跑状态约束，无并发上限。"""
+    return [
+        issue
+        for issue in issues
+        if issue.status == "pending" and issue.issue_id not in resolved and set(issue.depends_on) <= resolved
+    ]
 
 
 def propagate_failure(issues: list[Issue], failed: str) -> set[str]:
@@ -72,6 +70,7 @@ class WayfinderTeamIntegrationTests(unittest.TestCase):
         self.assertIn("一个 `map.md` 与其同目录 `issues/`", self.skill)
         self.assertIn("map 本身不是执行单元", self.skill)
         self.assertIn("input.kind: map-issues", self.skill)
+        self.assertIn("不产生代码提交", self.skill)
 
     def test_resolution_requires_answer_status_and_evidence(self):
         resolved = "## Answer\n结论\nStatus: resolved"
@@ -91,21 +90,27 @@ class WayfinderTeamIntegrationTests(unittest.TestCase):
         self.assertLess(self.skill.index("确认前不创建 team"), self.skill.index("确认后才用原生 `TeamCreate`"))
         self.assertIn("等待用户确认", self.skill)
 
-    def test_frontier_maximizes_concurrency_within_cap(self):
+    def test_dispatch_tops_up_immediately_when_unblocked(self):
         issues = [Issue("01"), Issue("02"), Issue("03"), Issue("04"), Issue("05"), Issue("06")]
-        self.assertEqual([issue.issue_id for issue in frontier_round(issues, set())], ["01", "02", "03", "04"])
-        self.assertEqual([issue.issue_id for issue in frontier_round(issues, set(), max_concurrency=2)], ["01", "02"])
+        self.assertEqual([issue.issue_id for issue in pick_dispatch(issues, set())], ["01", "02", "03", "04", "05", "06"])
+        issues[0].status = "claimed"
+        self.assertEqual([issue.issue_id for issue in pick_dispatch(issues, set())], ["02", "03", "04", "05", "06"])
         gated = [Issue("01"), Issue("02"), Issue("03", depends_on=["01"]), Issue("04", depends_on=["01"])]
-        self.assertEqual([issue.issue_id for issue in frontier_round(gated, set())], ["01", "02"])
-        self.assertEqual([issue.issue_id for issue in frontier_round(gated, {"01"})], ["02", "03", "04"])
+        gated[0].status = "claimed"
+        gated[1].status = "claimed"
+        self.assertEqual([issue.issue_id for issue in pick_dispatch(gated, set())], [])
+        gated[0].status = "resolved"
+        self.assertEqual([issue.issue_id for issue in pick_dispatch(gated, {"01"})], ["03", "04"])
         self.assertIn("frontier", self.skill)
-        self.assertIn("maxConcurrency", self.skill)
+        self.assertIn("全部并发派发", self.skill)
+        self.assertIn("立即补派", self.skill)
+        self.assertNotIn("maxConcurrency", self.skill)
         self.assertNotIn("allowedPaths", self.skill)
 
     def test_failure_only_blocks_descendants(self):
         issues = [Issue("01"), Issue("02", depends_on=["01"]), Issue("03", depends_on=["02"]), Issue("04")]
         self.assertEqual(propagate_failure(issues, "01"), {"02", "03"})
-        self.assertEqual(issues[3].status, "claimed")
+        self.assertEqual(issues[3].status, "pending")
         self.assertIn("只沿依赖后代传播", self.skill)
         self.assertIn("独立分支继续", self.skill)
         self.assertIn("独立核验", self.skill)

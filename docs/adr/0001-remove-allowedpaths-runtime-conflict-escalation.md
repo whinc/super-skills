@@ -1,4 +1,10 @@
+---
+status: superseded by ADR-0002
+---
+
 # 移除 allowedPaths，改用运行时 CONFLICT 升级
+
+> 2026-09-11 起被 [ADR-0002](./0002-worktree-isolation-for-implement-team.md) 取代：CONFLICT 升级已移除，改用 ticket worktree 隔离与集成分支合并。
 
 AgentTeam 编排协议此前要求每个 ticket 声明 `allowedPaths`，主 Agent 在调度期做路径冲突检查（fail-closed：路径交集即禁止并行），核验时再校验 changedFiles 是否越界。实践中 glob 交集检测不可靠且给 ticket 作者增加负担；AgentTeam 已具备 teammate 与主 Agent 的双向通信，冲突可以在运行时更准确地暴露。
 

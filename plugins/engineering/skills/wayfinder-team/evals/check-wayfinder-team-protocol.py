@@ -22,15 +22,14 @@ SKILL_TOKENS = (
     "blocked",
     "DAG",
     "frontier",
-    "maxConcurrency",
-    "protectedPaths",
+    "全部并发派发",
     "只沿依赖后代传播",
     "独立核验",
     "fail-closed",
     "等待用户确认",
     "确认前不创建 team",
-    "不确定",
-    "全量并发",
+    "不产生代码提交",
+    "立即补派",
     "references/agent-team-protocol.md",
 )
 PROTOCOL_TOKENS = (
@@ -39,6 +38,8 @@ PROTOCOL_TOKENS = (
     "解锁者",
     "独立核验者",
     "frontier",
+    "全部并发派发",
+    "等待与唤醒",
     "context 卫生",
     "终态事件",
     "TICKET_RESOLVED",
@@ -46,13 +47,12 @@ PROTOCOL_TOKENS = (
     "fail-closed",
     "evidenceDir",
     "tempDir",
-    "maxConcurrency",
-    "protectedPaths",
-    "CONFLICT",
+    "integrationVerify",
     "Status: resolved",
+    "立即补派",
 )
 LEGACY = ("implement-" + "fast", "implement-" + "tmux", "wayfinder-" + "map", "spec-" + "tickets")
-REMOVED = ("maxRepairRounds",)
+REMOVED = ("maxRepairRounds", "CONFLICT", "verifying", "maxConcurrency", "protectedPaths")
 
 
 def check_skill(text: str) -> list[str]:
@@ -90,7 +90,7 @@ def main() -> int:
         for error in errors:
             print(f"协议失败：{error}")
         return 1
-    print("协议通过：wayfinder-team 输入边界、确认门禁、frontier 调度与 protocol 机制契约有效")
+    print("协议通过：wayfinder-team 输入边界、确认门禁与 protocol 机制契约有效")
     return 0
 
 

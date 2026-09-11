@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""implement-team 的输入映射、确认门禁、DAG 和失败传播集成测试。"""
+"""implement-team 的输入映射、确认门禁、事件驱动调度、worktree 隔离和失败传播集成测试。"""
 
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -38,15 +38,13 @@ def merge_sources(prd: str | None, spec: str | None) -> dict[str, object]:
     return {"sources": [source for source, value in (("prd.md", prd), ("spec.md", spec)) if value], "conflicts": conflicts, "needs_confirmation": True}
 
 
-def frontier_round(tickets: list[Ticket], resolved: set[str], max_concurrency: int = 4) -> list[Ticket]:
-    selected = []
-    for ticket in tickets:
-        if len(selected) >= max_concurrency:
-            break
-        if ticket.status != "pending" or ticket.ticket_id in resolved or not set(ticket.depends_on) <= resolved:
-            continue
-        selected.append(ticket)
-    return selected
+def pick_dispatch(tickets: list[Ticket], resolved: set[str]) -> list[Ticket]:
+    """frontier 上的任务全部并发派发；只受依赖与在跑状态约束，无并发上限。"""
+    return [
+        ticket
+        for ticket in tickets
+        if ticket.status == "pending" and ticket.ticket_id not in resolved and set(ticket.depends_on) <= resolved
+    ]
 
 
 def propagate_failure(tickets: list[Ticket], failed: str) -> set[str]:
@@ -68,6 +66,7 @@ class ImplementTeamIntegrationTests(unittest.TestCase):
     def setUp(self):
         self.root = Path(__file__).parents[1]
         self.skill = (self.root / "SKILL.md").read_text()
+        self.worktree = (self.root / "references" / "worktree-merge.md").read_text()
 
     def test_prd_spec_are_merged_and_always_confirmed(self):
         result = merge_sources("范围\n验收: A", "约束\n验收: B")
@@ -97,17 +96,31 @@ class ImplementTeamIntegrationTests(unittest.TestCase):
         self.assertIn("直接调用 `/implement`", self.skill)
         self.assertIn("不创建 `TeamCreate` 或 `AgentTeam`", self.skill)
 
-    def test_frontier_maximizes_concurrency_within_cap(self):
+    def test_dispatch_tops_up_immediately_when_unblocked(self):
         tickets = [Ticket("01"), Ticket("02"), Ticket("03"), Ticket("04"), Ticket("05"), Ticket("06")]
-        self.assertEqual([ticket.ticket_id for ticket in frontier_round(tickets, set())], ["01", "02", "03", "04"])
-        self.assertEqual([ticket.ticket_id for ticket in frontier_round(tickets, set(), max_concurrency=2)], ["01", "02"])
+        self.assertEqual([ticket.ticket_id for ticket in pick_dispatch(tickets, set())], ["01", "02", "03", "04", "05", "06"])
+        tickets[0].status = "running"
+        self.assertEqual([ticket.ticket_id for ticket in pick_dispatch(tickets, set())], ["02", "03", "04", "05", "06"])
         gated = [Ticket("01"), Ticket("02"), Ticket("03", ["01"]), Ticket("04", ["01"])]
-        self.assertEqual([ticket.ticket_id for ticket in frontier_round(gated, set())], ["01", "02"])
-        self.assertEqual([ticket.ticket_id for ticket in frontier_round(gated, {"01"})], ["02", "03", "04"])
+        gated[0].status = "running"
+        gated[1].status = "running"
+        self.assertEqual([ticket.ticket_id for ticket in pick_dispatch(gated, set())], [])
+        gated[0].status = "resolved"
+        self.assertEqual([ticket.ticket_id for ticket in pick_dispatch(gated, {"01"})], ["03", "04"])
         self.assertIn("frontier", self.skill)
-        self.assertIn("CONFLICT", self.skill)
-        self.assertIn("maxConcurrency", self.skill)
+        self.assertIn("全部并发派发", self.skill)
+        self.assertIn("立即补派", self.skill)
+        self.assertNotIn("maxConcurrency", self.skill)
         self.assertNotIn("allowedPaths", self.skill)
+
+    def test_worktree_isolation_and_merge_contract(self):
+        for token in ("worktree", "集成分支", "Merger", "integrationVerify"):
+            self.assertIn(token, self.skill)
+        for token in ("git worktree add", "git merge --no-ff", "MERGE_RESOLVED", "MERGE_BLOCKED", "落回", "git worktree prune"):
+            self.assertIn(token, self.worktree)
+        self.assertIn("tracker 只有主 Agent 写", self.worktree)
+        self.assertNotIn("maxConcurrency", self.worktree)
+        self.assertNotIn("protectedPaths", self.worktree)
 
     def test_failure_only_propagates_to_descendants(self):
         tickets = [Ticket("01"), Ticket("02", ["01"]), Ticket("03", ["02"]), Ticket("04")]
@@ -123,6 +136,9 @@ class ImplementTeamIntegrationTests(unittest.TestCase):
         self.assertIn("evidence", self.skill)
         self.assertIn("fail-closed", self.skill)
         self.assertIn("references/agent-team-protocol.md", self.skill)
+        self.assertIn("references/worktree-merge.md", self.skill)
+        self.assertNotIn("CONFLICT", self.skill)
+        self.assertNotIn("CONFLICT", self.worktree)
 
     def test_protocol_ships_and_matches_sibling_copy(self):
         protocol = self.root / "references" / "agent-team-protocol.md"
