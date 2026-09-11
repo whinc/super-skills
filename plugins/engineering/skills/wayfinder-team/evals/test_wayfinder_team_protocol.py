@@ -18,18 +18,21 @@ disable-model-invocation: true
 input.kind: map-issues map.md 同目录 `issues/` .scratch/<effort>/ TeamCreate AgentTeam
 唯一 coordinator 派发者 解锁者 独立核验者 frontier /wayfinder
 ## Answer Status: resolved evidence blocked DAG maxConcurrency
-maxRepairRounds protectedPaths 只沿依赖后代传播 独立核验 fail-closed
+protectedPaths 只沿依赖后代传播 独立核验 fail-closed
 等待用户确认 确认前不创建 team 不确定 全量并发
 references/agent-team-protocol.md
 """
 
 
 class WayfinderTeamProtocolTests(unittest.TestCase):
-    def run_checker(self, content: str) -> subprocess.CompletedProcess:
+    def run_checker(self, content: str, protocol: str | None = None) -> subprocess.CompletedProcess:
         with tempfile.NamedTemporaryFile("w", suffix=".md") as fixture:
             fixture.write(content)
             fixture.flush()
-            return subprocess.run(["python3", str(CHECKER), fixture.name], capture_output=True, text=True)
+            command = ["python3", str(CHECKER), fixture.name]
+            if protocol is not None:
+                command.append(protocol)
+            return subprocess.run(command, capture_output=True, text=True)
 
     def test_real_skill_passes(self):
         result = subprocess.run(["python3", str(CHECKER), str(SKILL)], capture_output=True, text=True)
@@ -62,6 +65,24 @@ class WayfinderTeamProtocolTests(unittest.TestCase):
     def test_requires_input_location_convention(self):
         result = self.run_checker(VALID.replace(".scratch/<effort>/", "任意目录"))
         self.assertNotEqual(result.returncode, 0)
+
+    def test_requires_mechanism_contract_in_protocol_file(self):
+        with tempfile.NamedTemporaryFile("w", suffix=".md") as protocol:
+            protocol.write("缺少机制字段的文本")
+            protocol.flush()
+            result = self.run_checker(VALID, protocol.name)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("缺少机制字段", result.stdout)
+
+    def test_rejects_removed_repair_field(self):
+        result = self.run_checker(VALID + " maxRepairRounds: 0")
+        self.assertNotEqual(result.returncode, 0)
+        with tempfile.NamedTemporaryFile("w", suffix=".md") as protocol:
+            protocol.write("maxRepairRounds: 0")
+            protocol.flush()
+            result = self.run_checker(VALID, protocol.name)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("已移除字段", result.stdout)
 
     def test_rejects_implementation_skill_and_allowedpaths(self):
         result = self.run_checker(VALID + " /implement")

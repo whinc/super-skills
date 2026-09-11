@@ -90,7 +90,7 @@ class ImplementTeamIntegrationTests(unittest.TestCase):
         self.assertIn("唯一执行单元", self.skill)
 
     def test_confirmation_precedes_team_creation(self):
-        self.assertLess(self.skill.index("确认前不创建 team"), self.skill.index("确认后才创建一个原生 `AgentTeam`"))
+        self.assertLess(self.skill.index("确认前不创建 team"), self.skill.index("确认后才用原生 `TeamCreate`"))
 
     def test_direct_task_boundary_stays_outside_team(self):
         self.assertIn("direct-task", self.skill)

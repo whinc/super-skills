@@ -26,7 +26,6 @@ paths:
   protectedPaths: []                 # 禁止任何 teammate 触碰；防误伤用户工作区
 evidenceDir: ".scratch/runs/agent-team/<runId>"   # 项目内，可复核证据
 tempDir: "$TMPDIR/agent-team/<runId>"             # 系统临时目录，过程性大输出
-maxRepairRounds: 0
 tickets: []
 ```
 
@@ -34,7 +33,7 @@ tickets: []
 
 ## 协调与调度
 
-只创建一个原生 `TeamCreate` 得到的 `AgentTeam`。主 Agent 是唯一 coordinator、派发者、解锁者和核验者；成员共享 team 上下文，解锁后继始终由主 Agent 执行。DAG 必须检查唯一 ID、依赖存在、无环和 tracker 可写。
+只创建一个原生 `TeamCreate` 得到的 `AgentTeam`。主 Agent 是唯一 coordinator、派发者、解锁者和独立核验者；成员共享 team 上下文，解锁后继始终由主 Agent 执行。DAG 必须检查唯一 ID、依赖存在、无环和 tracker 可写。
 
 任务 `failed` 或 `blocked` 时，主 Agent 在共享上下文写入**一行事件摘要 + 指针**（事件详情、日志落盘到 `evidenceDir/<ticket>.failed.md`），`blocked` 只沿依赖后代传播，独立分支继续；后代派发 prompt 只引用指针路径。恢复动作（重试、reset、rollback、stash、删除证据）仅由用户批准触发，并需重建基线。
 
@@ -53,7 +52,7 @@ Teammate 在运行中发现文件冲突（编辑竞争、工作区出现非本 t
 主 Agent context 只保留决策所需最小信息：
 
 1. **双轨落盘**：evidence 等可复核产物写 `evidenceDir`（随 repo 保留）；过程性大输出（日志、中间产物）写 `tempDir`（不值得长期保留）。任何超出硬上限的内容一律落盘，事件中只留路径。
-2. **派发 prompt 瘦身**：prompt 只含 ticket ID、tracker 文件路径、`protectedPaths`、verify 命令、终态格式和一行目标摘要；ticket 原文由 teammate 自行 Read。主 Agent 只在输入评估/确认门禁阶段读一次 tracker。
+2. **派发 prompt 瘦身**：prompt 只含 ticket ID、tracker 文件路径、`protectedPaths`、子 agent skill 与 verify/探索命令、evidence 约定、终态格式和一行目标摘要；ticket 原文由 teammate 自行 Read。主 Agent 只在输入评估/确认门禁阶段读一次 tracker。
 3. **过程消息禁令**：teammate 只报告一次终态事件，进度只通过 tracker `Status:` 字段体现（`pending → running → verifying`），主 Agent 不轮询。CONFLICT 是唯一中途豁免。
 4. **核验输出落盘**：主 Agent 核验时命令输出重定向到 `evidenceDir/<ticket>.verify.log`，context 只留一行结论（ticket 核验通过/失败 + 原因）。
 5. **Run Report**：收尾时主 Agent 生成 `evidenceDir/report.md` 全量明细（每个 ticket 的 tracker、状态、commit、changedFiles、verification、evidence、失败/阻塞原因、未完成依赖）；对话中只输出简表（ticket / 状态 / commit / 一行结论）加 report 路径。
