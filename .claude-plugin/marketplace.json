@@ -1,6 +1,6 @@
 {
   "name": "super-skills",
-  "description": "A curated collection of skills for engineering workflows, web development, and learning.",
+  "description": "A curated collection of skills for engineering workflows and web development.",
   "owner": {
     "name": "whinc"
   },
@@ -8,7 +8,7 @@
     {
       "name": "super-skills",
       "source": "./",
-      "description": "A curated collection of skills for engineering workflows, web development, and learning."
+      "description": "A curated collection of skills for engineering workflows and web development."
     }
   ]
 }

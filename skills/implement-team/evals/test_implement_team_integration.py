@@ -140,12 +140,9 @@ class ImplementTeamIntegrationTests(unittest.TestCase):
         self.assertNotIn("CONFLICT", self.skill)
         self.assertNotIn("CONFLICT", self.worktree)
 
-    def test_protocol_ships_and_matches_sibling_copy(self):
+    def test_protocol_ships(self):
         protocol = self.root / "references" / "agent-team-protocol.md"
         self.assertTrue(protocol.exists())
-        sibling = self.root.parent / "wayfinder-team" / "references" / "agent-team-protocol.md"
-        if sibling.exists():
-            self.assertEqual(protocol.read_text(), sibling.read_text())
 
     def test_references_stay_inside_the_skill_folder(self):
         outside = re.compile(r"(^|[^\w/.])docs/|\.\./|/Users/|/home/")

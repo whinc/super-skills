@@ -1,6 +1,6 @@
 # Super Skills — AgentTeam 编排
 
-本仓库维护 ClaudeCode/CodeBuddy 的 skill 集合，其中 wayfinder-team 与 implement-team 基于原生 AgentTeam 并发派发子 agent。本词汇表约定团队编排与 memory 压缩的领域语言。
+本仓库维护 ClaudeCode/CodeBuddy 的 skill 集合，其中 implement-team 基于原生 AgentTeam 并发派发子 agent。本词汇表约定团队编排与 memory 压缩的领域语言。
 
 ## 语言
 
@@ -19,12 +19,8 @@ _Avoid_: sub-agent（泛指时可用）、worker
 _Avoid_: ready ticket、ready issue、待办列表、波次同步
 
 **Ticket**：
-AgentTeam 中的唯一执行单元，对应一个实现 ticket（implement-team）或探索 child issue（wayfinder-team）。
+AgentTeam 中的唯一执行单元，对应一个实现 ticket。
 _Avoid_: 任务、工单
-
-**Map**：
-wayfinder 的探索地图文件（`map.md`），只读；对地图的补充以新增 issue 文件形式进行，不直接改写 Map。
-_Avoid_: 把 Map 当作执行单元
 
 **等待与唤醒**：
 派发后主 Agent 结束当前回合等待终态通知，不轮询；每收到一个终态事件即处理，任一 Ticket 仍在 `running` 时不得收尾或宣称完成。

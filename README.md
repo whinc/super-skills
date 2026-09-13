@@ -1,6 +1,6 @@
 # super-skills
 
-个人工程思考沉淀成的 skill 集合，供编码 agent 使用：React 反模式修正、多 ticket 并发实现编排、agent memory 定期压缩、面向 12 岁读者的讲解。所有 skill 遵循 [Skills 规范](https://skills.sh/docs/cli)。
+个人工程思考沉淀成的 skill 集合，供编码 agent 使用：React 反模式修正、多 ticket 并发实现编排、agent memory 定期压缩。所有 skill 遵循 [Skills 规范](https://skills.sh/docs/cli)。
 
 ## Skill 一览
 
@@ -11,12 +11,7 @@
 ### 工程工作流
 
 - **[implement-team](./skills/implement-team/SKILL.md)**: PRD/spec 实现编排层：经用户确认后，把 `.scratch/<feature>/issues/` 实现 tickets 按依赖 DAG 事件驱动并发派发。每个 ticket 在独立 git worktree 中调用 `/implement`，主 Agent 独立核验后合并进集成分支、收尾落回原分支。
-- **[wayfinder-team](./skills/wayfinder-team/SKILL.md)**: 地图探索编排层：经用户确认后，把 `map.md` 的 child issues 派发到共享 AgentTeam 并发探索。每个 issue 调用 `/wayfinder`；需要代码或配置变更的 issue 标记 `blocked`，不自动实现。
 - **[memory-compact](./skills/memory-compact/SKILL.md)**: agent memory 定期压缩：按 keep/merge/delete/promote 清理过时、重复、任务特定与可恢复条目，批量提案经一次确认后写回，主入口保持 200 行 / 25KB 双上限。
-
-### 学习与讲解
-
-- **[eli12](./skills/eli12/SKILL.md)**: 面向好奇的 12 岁读者解释任意主题，使用清晰的可视化、简短段落和 HTML artifact。
 
 ## 安装
 
@@ -52,4 +47,4 @@ npx skills@latest add whinc/super-skills --skill react-effects
 
 ## 与 mattpocock/skills 的关系
 
-本仓库独立维护，不替代 [`mattpocock/skills`](https://github.com/mattpocock/skills)：其 `/implement`、`/wayfinder` 负责单个 ticket/issue 的执行；本仓库的 `implement-team`、`wayfinder-team` 是其上的多 ticket/issue 并发编排层。其余 skill（`react-effects`、`eli12`）为独立领域 skill，无依赖。
+本仓库独立维护，不替代 [`mattpocock/skills`](https://github.com/mattpocock/skills)：其 `/implement` 负责单个 ticket 的执行；本仓库的 `implement-team` 是其上的多 ticket 并发编排层。其余 skill（`react-effects`、`memory-compact`）为独立领域 skill，无依赖。

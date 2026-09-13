@@ -40,7 +40,7 @@ tickets: []
 主 Agent context 只保留决策所需最小信息：
 
 1. **双轨落盘**：evidence 等可复核产物写 `evidenceDir`（随 repo 保留）；过程性大输出（日志、中间产物）写 `tempDir`（不值得长期保留）。任何超出硬上限的内容一律落盘，事件中只留路径。
-2. **派发 prompt 瘦身**：prompt 只含 ticket ID、tracker 文件路径、子 agent skill 与 verify/探索命令、evidence 约定、终态格式和一行目标摘要；ticket 原文由 teammate 自行 Read。主 Agent 只在输入评估/确认门禁阶段读一次 tracker。
+2. **派发 prompt 瘦身**：prompt 只含 ticket ID、tracker 文件路径、子 agent skill 与 verify 命令、evidence 约定、终态格式和一行目标摘要；ticket 原文由 teammate 自行 Read。主 Agent 只在输入评估/确认门禁阶段读一次 tracker。
 3. **过程消息禁令**：teammate 只报告一次终态事件，进度只通过 tracker `Status:` 字段体现（`pending → running → resolved/failed/blocked`），主 Agent 不轮询。
 4. **核验输出落盘**：主 Agent 核验时命令输出重定向到 `evidenceDir/<ticket>.verify.log`，context 只留一行结论（ticket 核验通过/失败 + 原因）。
 5. **Run Report**：收尾时主 Agent 生成 `evidenceDir/report.md` 全量明细（每个 ticket 的 tracker、状态、commit、changedFiles、verification、evidence、失败/阻塞原因、未完成依赖）；对话中只输出简表（ticket / 状态 / commit / 一行结论）加 report 路径。
@@ -53,7 +53,7 @@ tickets: []
 {"event":"TICKET_RESOLVED","ticket":"01","status":"resolved","commit":"abc1234","changedFiles":["src/example.ts"],"verification":[{"command":"python3 -m unittest","result":"passed","evidence":".scratch/runs/agent-team/<runId>/01.log"}],"evidence":[".scratch/runs/agent-team/<runId>/01.log"],"summary":"验收通过","reason":null}
 ```
 
-事件只能是 `TICKET_RESOLVED`、`TICKET_FAILED` 或 `TICKET_BLOCKED`；状态只能是 `resolved`、`failed` 或 `blocked`。硬上限：`summary` ≤ 2 行；`changedFiles` 超过 20 条时完整清单落盘到 `evidenceDir/<ticket>.files.md`，事件只留清单文件路径；`verification` 只含命令、结果和 evidence 路径，不含命令输出。`resolved` 必须有非空 evidence，并把 tracker 的 `Status: resolved` 回写；失败和阻塞必须有 reason、已运行验证和 evidence。wayfinding issue 额外必须有 `## Answer`、`Status: resolved` 和探索证据。
+事件只能是 `TICKET_RESOLVED`、`TICKET_FAILED` 或 `TICKET_BLOCKED`；状态只能是 `resolved`、`failed` 或 `blocked`。硬上限：`summary` ≤ 2 行；`changedFiles` 超过 20 条时完整清单落盘到 `evidenceDir/<ticket>.files.md`，事件只留清单文件路径；`verification` 只含命令、结果和 evidence 路径，不含命令输出。`resolved` 必须有非空 evidence，并把 tracker 的 `Status: resolved` 回写；失败和阻塞必须有 reason、已运行验证和 evidence。
 
 主 Agent 独立复核：commit 存在且属于当前 ticket，Git 基线未被污染，staging、coverage 和锁未被改动，验证命令/evidence 可复核，tracker 状态正确。`changedFiles` 是纯记录，不做范围校验。核验通过后才释放依赖。
 
