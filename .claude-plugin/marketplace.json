@@ -1,24 +1,14 @@
 {
   "name": "super-skills",
-  "description": "Selectable skills for web development, engineering workflows, and learning",
+  "description": "A curated collection of skills for engineering workflows, web development, and learning.",
   "owner": {
     "name": "whinc"
   },
   "plugins": [
     {
-      "name": "web",
-      "source": "./plugins/web",
-      "description": "Web development skills"
-    },
-    {
-      "name": "engineering",
-      "source": "./plugins/engineering",
-      "description": "Engineering workflow skills"
-    },
-    {
-      "name": "learning",
-      "source": "./plugins/learning",
-      "description": "Learning and explanation skills"
+      "name": "super-skills",
+      "source": "./",
+      "description": "A curated collection of skills for engineering workflows, web development, and learning."
     }
   ]
 }

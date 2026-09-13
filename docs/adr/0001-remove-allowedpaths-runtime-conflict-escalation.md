@@ -19,4 +19,4 @@ AgentTeam 编排协议此前要求每个 ticket 声明 `allowedPaths`，主 Agen
 ## Consequences
 
 - wayfinder-team 无 CONFLICT 豁免：探索型 teammate 不写代码，tracker 按 issue 天然隔离；`map.md` 只读，对地图的补充以新增 issue 文件进行。
-- 协议同时纳入 context 卫生约束（双轨落盘、终态事件硬上限、指针化共享上下文、run report），见 `plugins/engineering/skills/implement-team/references/agent-team-protocol.md`。
+- 协议同时纳入 context 卫生约束（双轨落盘、终态事件硬上限、指针化共享上下文、run report），见 `skills/implement-team/references/agent-team-protocol.md`。

@@ -1,6 +1,6 @@
 # Super Skills — AgentTeam 编排
 
-本仓库维护 ClaudeCode/CodeBuddy 的 skill 集合，其中 engineering 插件的 wayfinder-team 与 implement-team 基于原生 AgentTeam 并发派发子 agent。本词汇表约定团队编排与 memory 压缩的领域语言。
+本仓库维护 ClaudeCode/CodeBuddy 的 skill 集合，其中 wayfinder-team 与 implement-team 基于原生 AgentTeam 并发派发子 agent。本词汇表约定团队编排与 memory 压缩的领域语言。
 
 ## 语言
 
