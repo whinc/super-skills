@@ -1,6 +1,6 @@
 # Super Skills — AgentTeam 编排
 
-本仓库维护 ClaudeCode/CodeBuddy 的 skill 集合，其中 implement-team 基于原生 AgentTeam 并发派发子 agent。本词汇表约定团队编排与 memory 压缩的领域语言。
+本仓库维护 ClaudeCode/CodeBuddy 的 skill 集合，其中 implement-team 基于原生 AgentTeam 并发派发子 agent。本词汇表约定团队编排、会话交接与 memory 压缩的领域语言。
 
 ## 语言
 
@@ -73,6 +73,12 @@ _Avoid_: 进度汇报、完成报告、心跳
 **Run Report**：
 收尾时主 Agent 生成到 evidenceDir 的全量明细文件；含每个 Ticket 的状态与证据、集成验证结果、合并记录、落回 SHA 与保留的 worktree 路径。对话中只输出简表（Ticket / 状态 / commit / 一行结论）加 Report 路径。
 _Avoid_: 在对话中全量汇总
+
+### 会话交接
+
+**Handoff（会话交接）**：
+把当前会话中继续工作所需的上下文压缩成一份脱敏摘要，并以该摘要为 prompt 启动一个独立后台 agent 接续；区别于 AgentTeam 的“等待与唤醒”——后者是同一 run 内的终态通知。
+_Avoid_: 转交、会话迁移、后台任务（泛指）
 
 ### Memory 卫生
 
