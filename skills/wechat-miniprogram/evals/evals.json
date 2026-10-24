@@ -18,6 +18,18 @@
       "prompt": "Taro 项目改完样式，模拟器里没变化，我直接改 miniprogramRoot 下的产物行吗？",
       "expected_output": "先定位框架源码与构建脚本，改源码后重新构建到微信目标目录，不直接修补会被下次构建覆盖的产物；改完按 references/wechat-devtools/project-workflows.md 编译刷新，并说明构建通过不等于页面运行通过。",
       "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "云函数本地跑得通，部署到测试环境后线上调用报找不到函数，帮我重新部署一下。",
+      "expected_output": "按 references/wechat-devtools/cloudbase.md 先固定 appid + env，用 cloud_fn_list 定位既有函数、cloud_fn_info 查状态，再决定是否部署；函数目录名即部署目标名。部署受理不等于完成，按入口的异步规则查原 taskId 结果；失败先看错误码，不重复部署。上线调用结果需单独验证。",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "wechatide 命令报版本或接口不可用，是不是把 --skill-version 改成最新值就行了？",
+      "expected_output": "按 references/wechat-devtools/environment.md 先核对运行时与入口（旧 NW.js 不支持新接口）、MIN_COMPATIBLE_VERSION 2.02.2607152 与状态检查的 versionRelation；--skill-version 保持真实协议版本。版本或接口不满足时只阻塞 IDE 操作，纯源码、配置与构建工作继续，并说明缺口。",
+      "files": []
     }
   ]
 }

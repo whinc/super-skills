@@ -12,7 +12,7 @@
 | tool-index | [工具索引](tool-index.md)：53 个定义（含两个废弃配置工具）；原始 `tools.yaml` 未随本 skill 分发，参数用 `wechatide <toolName> -h` 或本机已装 `wechatide-skill` 核对 |
 | approval-policy、async-task-polling | [总入口](index.md)：保留工具自身交互与 taskId 规则，继承用户既有授权；凭据由宿主/本地文件隔离，不照搬让模型索取或记住 Token 的条款 |
 
-上游较早门槛是 **Nightly Electron Build 2.02.2607032**；0.3.11 与 0.3.14 安装辅助代码的兼容常量均为 **2.02.2607152**，检测已安装版本时允许等于，筛选新下载包时要求严格大于。官方下载入口为[微信开发者工具更新日志/Nightly](https://developers.weixin.qq.com/miniprogram/dev/devtools/log#nightly)，安装前核对真实平台、渠道和文件来源。
+版本门槛、安装渠道与官方下载入口见[环境与版本](environment.md)；本页只记录来源与适配关系。
 
 这是整合快照，不声称与微信线上最新版本永远同步。新安装的 IDE 若报告适配资料落后，更新本模块资料并重新核对，不要把本 skill 目录或开发者工具安装目录直接覆盖为上游 Skill。
 

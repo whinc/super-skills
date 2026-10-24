@@ -1,6 +1,6 @@
 ---
 name: wechat-miniprogram
-description: "Implement and verify WeChat Mini Program and Mini Game work: locate source and config, compile and refresh the simulator, preview and upload, automate pages and canvas, read console/network evidence, and integrate CloudBase. Use when a project has project.config.json, app.json, or WXML/WXSS, or when the user mentions 小程序, 小游戏, 微信开发者工具, wechatide, 预览二维码, miniprogram-ci, or building Taro/uni-app into WeChat. Evidence-based: a passing build is not a passing runtime, and the simulator is not a phone."
+description: "Implement and verify WeChat Mini Program and Mini Game work: locate source and config, compile, preview and upload, automate pages and canvas, read console/network evidence, and integrate CloudBase. Use when a project has project.config.json, app.json, or WXML/WXSS, or when the user mentions 小程序, 小游戏, 微信开发者工具/wechatide, or building Taro/uni-app into WeChat."
 ---
 
 # 小程序开发与验证
@@ -9,9 +9,9 @@ description: "Implement and verify WeChat Mini Program and Mini Game work: locat
 
 ## 内置微信开发者工具工作流
 
-需要创建/导入微信项目、编译、预览上传、模拟器自动化、日志截图或云开发时，读取[微信工具入口](references/wechat-devtools/index.md)，再只读相应专题。本 skill 依据 `wechatide-skill 0.3.14` 的工具协议整理，不要求另外安装原 Skill。小程序和小游戏都可进入，但页面、画布和构建工具的适用范围按对应参数核实。
+需要创建/导入微信项目、编译、预览上传、模拟器自动化、日志截图或云开发时，读取[微信工具入口](references/wechat-devtools/index.md)，再只读相应专题。本 skill 依据微信开发者工具 Skill 的工具协议整理，不要求另外安装原 Skill；协议版本见[环境与版本](references/wechat-devtools/environment.md)。小程序和小游戏都可进入，但页面、画布和构建工具的适用范围按对应参数核实。
 
-这套新接口要求 Electron 版开发者工具；本次来源包的安装检查基线是 **2.02.2607152**，高于旧提示中的 **Nightly 2.02.2607032**。下载安装选择及版本关系见[环境与版本](references/wechat-devtools/environment.md)，不能仅凭版本号或 GUI 已安装就声称新接口可用。普通源码修改、配置编辑和既有 `miniprogram-ci` 工作流不因缺少这套新接口而被禁止；继续能独立验证的部分。
+这套新接口要求 Electron 版开发者工具；版本门槛、安装渠道与版本关系见[环境与版本](references/wechat-devtools/environment.md)。版本号达标或 GUI 已安装，都只是候选证据，接口是否可用以状态检查为准。缺少这套新接口时，只有依赖它的 IDE 操作暂停；普通源码修改、配置编辑和既有 `miniprogram-ci` 工作流照常继续。
 
 ## 找到源码和目标配置
 

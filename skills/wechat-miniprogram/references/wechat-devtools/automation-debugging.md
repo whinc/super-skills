@@ -1,6 +1,6 @@
 # 微信自动化与运行时诊断
 
-基于官方包 `wechatide-skill 0.3.14`。仅当任务需要微信运行证据时使用本页；调用前完成 [环境准备](environment.md)，需要模拟器的操作确认项目窗口已打开。原始工具参数用 `wechatide <toolName> -h` 按 ID 核对。凭据、日志脱敏与未完成异步任务统一遵循 [入口](index.md)。
+基于本机 `wechatide-skill` 的工具协议（版本见[环境与版本](environment.md)）。仅当任务需要微信运行证据时使用本页；调用前完成 [环境准备](environment.md)，需要模拟器的操作确认项目窗口已打开。原始工具参数用 `wechatide <toolName> -h` 按 ID 核对。凭据、日志脱敏与未完成异步任务统一遵循 [入口](index.md)。
 
 ## 先区分小程序和小游戏
 

@@ -1,6 +1,6 @@
-# 微信工具索引（协议 0.3.14）
+# 微信工具索引
 
-只按本次任务定位工具，参数用 `wechatide <toolName> -h` 按 `id` 核对；需要完整 schema 时再读本机已装 `wechatide-skill` 的 `wechatide-tools/references/tools.yaml`，不要每次全部加载。
+只按本次任务定位工具，参数用 `wechatide <toolName> -h` 按 `id` 核对；需要完整 schema 时再读本机已装 `wechatide-skill` 的 `wechatide-tools/references/tools.yaml`。
 
 共 53 个定义，51 个当前工具及两个已废弃工具。此清单不等于本机已具备这些工具。以下参数使用 schema 原字段名；CLI 的连字符形式及复杂 JSON 文件选项以该工具帮助为准，action 的条件必需参数还须查看相应描述。
 
