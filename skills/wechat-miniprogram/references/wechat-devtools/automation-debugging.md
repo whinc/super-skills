@@ -20,7 +20,7 @@
 | 读取当前页、页栈或系统信息 | `automation_runtime_info` | 必填 `action`：`currentPage`、`pageStack`、`systemInfo` |
 | 导航 | `automation_navigate` | `action` 可取 `navigateTo`、`redirectTo`、`navigateBack`、`reLaunch`、`switchTab`；按动作传 `url` 或 `delta` |
 | 查元素、读页面状态 | `automation_page_action` | `querySelector(All)` 使用 `selector`；`getData` 的 `dataPath` 是 data 字段路径，不是页面路径 |
-| 点击、输入、读取元素 | `automation_element_action` | 用 `selector` 与目标 `action`，例如 `tap`、`input`、`text`、`offset`；输入值用 `value` |
+| 点击、输入、读取元素 | `automation_element_action` | 用 `selector` 与目标 `action`，例如 `tap`、`input`、`text`、`offset`；输入值用 `value`；`style` 必须另配 `name`（CSS 属性名，返回计算值）；`scrollTo` 必须同时给 `x` 和 `y`（横向不动传 0） |
 | 滚动页面 | `automation_viewport_action` | `action: pageScrollTo` 和 `scrollTop`；此工具不接受 `tap` / `input` |
 | 截图 | `simulator_screenshot` | 可选本地 `path`；返回文件路径和 `imageWidth` / `imageHeight` |
 
@@ -29,7 +29,12 @@ wechatide -c '<clientName>' automation_runtime_info --project '/absolute/path/to
 wechatide -c '<clientName>' automation_page_action --project '/absolute/path/to/project' --action querySelectorAll --selector '.submit-btn'
 wechatide -c '<clientName>' automation_element_action --project '/absolute/path/to/project' --selector '.submit-btn' --action tap --wait-for-selector '.submit-btn'
 wechatide -c '<clientName>' simulator_screenshot --project '/absolute/path/to/project' --wait-for-selector '.result'
+wechatide -c '<clientName>' automation_element_action --project '/absolute/path/to/project' --selector '.title' --action style --name fontSize
+wechatide -c '<clientName>' automation_element_action --project '/absolute/path/to/project' --selector 'scroll-view' --action scrollTo --x 0 --y 9999
+wechatide -c '<clientName>' automation_evaluate --project '/absolute/path/to/project' --fn-source 'function(){ return wx.getStorageSync("k"); }'
 ```
+
+`automation_evaluate` 的 `fn-source` 只收**函数源码**（`function(){ ... }`）。表达式、末尾自执行的 IIFE、以括号开头的字面量都会被参数解析拒绝并报 `Arg string terminates parameters early`；要取返回值就在函数体里 `return`。`style` 返回单个属性的计算值字符串，读多个属性要按属性逐个调用。
 
 优先稳定 selector，找不到元素时核对当前页、选择器和渲染条件。`waitForSelector` 在操作前等待；等待导航目标页的结果，应在导航后另读目标元素/截图，不把操作前等待当成结果断言。工具的 `wait` 单位为秒，快照范围 0–10，不能不断加长等待掩盖定位错误。
 
