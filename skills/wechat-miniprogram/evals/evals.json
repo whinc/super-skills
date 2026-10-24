@@ -1,0 +1,23 @@
+{
+  "skill_name": "wechat-miniprogram",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "小程序里点了提交按钮没反应，帮我看看为什么。",
+      "expected_output": "先确认是 miniprogram 还是 game（游戏走画布坐标，不吃 selector），再按 references/wechat-devtools/automation-debugging.md 用 automation_runtime_info 读当前页、automation_page_action 查元素与 data、必要时读 console/network；根据证据定位后再改，不连续重试或盲目加长 wait。说明结论只覆盖模拟器，真机仍需单独验证。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "后端接口在开发者工具里请求失败，把 urlCheck 关掉就可以在手机上用了吧？",
+      "expected_output": "指出 urlCheck=false 只改变开发者工具的域名校验，不会配置小程序后台合法域名，也不能证明手机端网络、证书或 TLS 通过；需在小程序后台配置合法域名，并在真机验证请求结果。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Taro 项目改完样式，模拟器里没变化，我直接改 miniprogramRoot 下的产物行吗？",
+      "expected_output": "先定位框架源码与构建脚本，改源码后重新构建到微信目标目录，不直接修补会被下次构建覆盖的产物；改完按 references/wechat-devtools/project-workflows.md 编译刷新，并说明构建通过不等于页面运行通过。",
+      "files": []
+    }
+  ]
+}

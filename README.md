@@ -1,11 +1,12 @@
 # super-skills
 
-个人工程思考沉淀成的 skill 集合，供编码 agent 使用：React 反模式修正、agent memory 定期压缩、会话交接给后台 agent 续跑。所有 skill 遵循 [Skills 规范](https://skills.sh/docs/cli)。
+个人工程思考沉淀成的 skill 集合，供编码 agent 使用：React 反模式修正、会话交接给后台 agent 续跑、微信小程序开发与验证、agent memory 定期压缩。所有 skill 遵循 [Skills 规范](https://skills.sh/docs/cli)。
 
 ## Skill 一览
 
 - **[react-effects](./skills/react-effects/SKILL.md)**: 检测并修正 React `useEffect` 反模式。覆盖 12 种常见场景，为每种场景给出更简单、更高性能的正确替代方案。
 - **[codebuddy-handoff](./skills/codebuddy-handoff/SKILL.md)**（命令 `/cbc-handoff`）: CodeBuddy 会话交接：把当前对话压缩成脱敏摘要，用 `codebuddy --bg` 启动新的后台 agent 立即接续，用户用 `codebuddy agents` 管理。
+- **[wechat-miniprogram](./skills/wechat-miniprogram/SKILL.md)**: 微信小程序/小游戏开发与验证：定位源码与配置、编译预览上传、模拟器自动化与 console/network 诊断、云开发联调；构建、模拟器、手机三类证据分开报告。模拟器、预览、上传走新版 `wechatide` 接口，需 Electron 版微信开发者工具 **2.02.2607152+**；纯源码、配置与构建工作不受此限。
 - **[memory-compact](./skills/memory-compact/SKILL.md)**: agent memory 定期压缩：按 keep/merge/delete/promote 清理过时、重复、任务特定与可恢复条目，批量提案经一次确认后写回，主入口保持 200 行 / 25KB 双上限。
 
 ## 安装
